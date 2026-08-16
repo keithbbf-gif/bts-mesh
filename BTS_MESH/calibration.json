@@ -1,0 +1,49 @@
+{
+ "_README": "Closed-loop spend calibration. Keith posts the vendor's own figure; we compute the correction for our internal estimate. ALL FOUR VENDORS ARE UI-ONLY for spend (measured 2026-07-16) — there is nothing to poll, so this human-in-the-loop signal is the ONLY ground truth that exists.",
+ "rails": {
+  "vertex": {
+   "samples": [
+    {
+     "t": "2026-07-16T10:38:32",
+     "est": 0.037731,
+     "actual": 0.09,
+     "ratio": 2.3853065118867773,
+     "note": "console banner 2026-07-16: $299.91 of $300, 89d left. --est passed explicitly because vertex_usage.json spend was already SET to Googles 0.09; reading the ledger would compare 0.09 to 0.09 and record a false 1.00x."
+    },
+    {
+     "t": "2026-07-16T11:32:15",
+     "est": 0.07868095,
+     "actual": 0.11,
+     "ratio": 1.398051243661903,
+     "note": "console banner 2026-07-16 ~11:20: $299.89 of $300 = $0.11 spent. SECOND reconciliation. The ledger now spans BOTH pre-fix calls (thoughtsTokenCount ignored) and post-fix calls (thinking counted + thinkingBudget capped), so this factor is a BLEND and should keep falling toward ~1.0 as post-fix calls dominate. ALSO FOUND: AI/Agent Studio Settings->Usage shows INPUT+OUTPUT TOKEN COUNT PER DAY PER MODEL (last 7d, 19 models) - token counts, not dollars, but it is real per-model compute visibility."
+    },
+    {
+     "t": "2026-07-31T19:45:00",
+     "est": 0.4524065499999999,
+     "actual": 2.910922,
+     "ratio": 6.3166,
+     "note": "🔴 AUTHORITATIVE RECONCILIATION. Google's own export: Vertex AI $2.910922, the ONLY service line (confirms 'all on Vertex'). Tax $0.00. ⚠ 'Other savings' = $0.00, which CONTRADICTS our 07-16 note that that field IS the credit draw — the console banner independently says $297.09/$300, so the money WAS credit-funded. Our reading of the report format is wrong somewhere; do not cite the 07-16 rule again until settled. *** THE GAP IS PRICING, NOT COUNTING: at the dearest plausible pro/long-context rate WITH thinking billed as output, our own token counts reach $2.49 of the $2.91 — 86%. So the ledger's TOKENS are roughly right and its PRICE TABLE is ~6x low. The earlier 'uncounted thinking tokens' hypothesis is INSUFFICIENT on its own. Prices used in this test were UNVERIFIED estimates; get the real Vertex price card before tuning anything. ***",
+     "source": "GOOGLE BILLING EXPORT (authoritative), gcp_billing_2026-07.csv"
+    }
+   ],
+   "factor": 6.3166,
+   "last_reconciled": "2026-07-16T11:32:15",
+   "source": "console banner: 'Free trial status: $X credit and N days remaining' (https://console.cloud.google.com/billing?authuser=2) -> actual = 300 - X",
+   "factor_conf": "U — 2.39x then 6.32x, 15 days apart. DO NOT TUNE THIS NUMBER. Two samples that disagree by 2.6x are not a calibration curve. Fix the price table instead, or delete the estimator and read the console."
+  },
+  "sgh": {
+   "samples": [
+    {
+     "t": "2026-07-16T11:11:15",
+     "est": 3.3789,
+     "actual": 3.33,
+     "ratio": 0.9855278345023529,
+     "note": "console.x.ai settings/billing 2026-07-16: balance $6.67, $10.00 purchased 12 Jul (Paid) + $5.00 FAILED => spent 3.33. CONFIRMS xAI cost_in_usd_ticks is genuinely EXACT: we are 1.5% HIGH (over-report = safe direction). Contrast vertex at 2.39x LOW. ALSO SEEN: auto top-up ON - charges $10 when balance <= $5; balance $6.67 = $1.67 from a card charge. The $10 stop is OUR code, not xAI's. Billing email dchamberss@gmail.com (3rd identity)."
+    }
+   ],
+   "factor": 0.9855,
+   "last_reconciled": "2026-07-16T11:11:15",
+   "source": "console.x.ai billing page. NOTE xAI reports cost_in_usd_ticks EXACTLY per call, so this rail may already be truth (expected factor ~1.0). MEASURE IT — do not assume."
+  }
+ }
+}

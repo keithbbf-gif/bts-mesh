@@ -1,0 +1,126 @@
+{
+ "ts": 1786903709,
+ "when": "2026-08-16 13:08:29",
+ "nodes": [
+  {
+   "id": "crossref",
+   "name": "CROSSREF",
+   "what": "DOI truth",
+   "col": "#3ddc84",
+   "ms": 170.8,
+   "ok": true,
+   "note": "DOI truth. Free, unlimited, and it is REGISTRY truth \u2014 not a model's recollection.",
+   "cost_usd": 0.0
+  },
+  {
+   "id": "itc",
+   "name": "ITC",
+   "what": "R2 edge",
+   "col": "#FBAD41",
+   "ms": 136.9,
+   "ok": true,
+   "note": "Cloudflare R2 edge. Reached in 136.9 ms but returned HTTP 403 \u2014 from a sandboxed host this is the EGRESS ALLOWLIST, not an outage. Re-run on the Windows box.",
+   "cost_usd": 0.0
+  },
+  {
+   "id": "gem",
+   "name": "GEM",
+   "what": "flash\u00b7free",
+   "col": "#8b7cff",
+   "ms": 836.3,
+   "ok": true,
+   "note": "FAILED OVER TO VERTEX (?) on gemini-2.5-flash \u2014 NOT the free tier. The free rail is DEAD, not spent: 'prepayment credits depleted' is a BILLING STATE and does not reset. TOPPING UP DOES NOT FIX IT \u2014 any billing account linked to a project (even a free trial) makes it Tier 1 permanently. The ONLY fix is a project with billing NEVER linked. \u26a0 And it is UNVERIFIED that the $300 even pays for Agent Platform \u2014 check Billing\u2192Reports before calling this free.",
+   "cost_usd": 0.0
+  },
+  {
+   "id": "vertex",
+   "name": "VERTEX",
+   "what": "2.5-pro",
+   "col": "#8b7cff",
+   "ms": 2370.3,
+   "ok": true,
+   "note": "gemini-2.5-pro on the $300 credit. Use when it must be RIGHT.",
+   "cost_usd": 0.0
+  },
+  {
+   "id": "sgh",
+   "name": "SGH",
+   "what": "grok-4.5",
+   "col": "#e8734a",
+   "ms": 1712.5,
+   "ok": true,
+   "note": "grok-4.5 via /v1/responses. Real model time, not just TCP.",
+   "cost_usd": 0.000433
+  }
+ ],
+ "internodes": [
+  {
+   "id": "rold",
+   "a": "COWORK",
+   "b": "ROLD",
+   "ms": 10.09,
+   "ok": true,
+   "col": "#3ddc84",
+   "note": "local disk. The floor \u2014 nothing in the mesh beats it."
+  },
+  {
+   "id": "gdx",
+   "a": "COWORK",
+   "b": "GDX",
+   "ms": null,
+   "ok": false,
+   "col": "#5f6ea0",
+   "note": "Drive for Desktop not mounted."
+  },
+  {
+   "id": "itc",
+   "a": "COWORK",
+   "b": "ITC",
+   "ms": 152.2,
+   "ok": false,
+   "status": 403,
+   "col": "#FBAD41",
+   "note": "HTTP 403 here = egress allowlist, NOT an outage."
+  },
+  {
+   "id": "sgh",
+   "a": "COWORK",
+   "b": "SGH",
+   "ms": 1147.0,
+   "ok": true,
+   "col": "#e8734a",
+   "cost_usd": 0.000433,
+   "note": "grok-4.5 API. Was 30-90 s over the Chrome bridge; this edge is the single biggest upgrade in the mesh."
+  },
+  {
+   "id": "sgh-gdx",
+   "a": "SGH",
+   "b": "GDX",
+   "ms": null,
+   "ok": null,
+   "col": "#5f6ea0",
+   "note": "Grok's OWN Drive connector writes this leg \u2014 it does not pass through Cowork, so we cannot time it from here. Proven working 2026-07-11. Not measured, not guessed."
+  },
+  {
+   "id": "bridge",
+   "a": "COWORK",
+   "b": "BROWSER",
+   "ms": 60000,
+   "ok": true,
+   "col": "#ff4d4d",
+   "note": "~30-90 s Chrome bridge. RETIRED for SGH (now on the API). Still the only path to GBW/Copilot. Carried from measurement, not re-probed."
+  }
+ ],
+ "bus": {
+  "fanout": 4,
+  "serial_ms": 751.8,
+  "parallel_ms": 270.9,
+  "speedup": 2.78,
+  "efficiency_pct": 69.4,
+  "ok": true,
+  "note": "Theoretical max speedup = fanout (4x). Efficiency = what the bus actually delivered. Well under 100% means the bus \u2014 not the nodes \u2014 is the limit."
+ },
+ "cost_usd": 0.000866,
+ "free_only": false,
+ "elapsed_s": 8.4
+}

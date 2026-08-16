@@ -212,22 +212,29 @@ def _month() -> str:
     return datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m")
 
 
+class LedgerUnreadable(RuntimeError):
+    """The ledger exists and cannot be parsed. NOT the same as 'no ledger yet'."""
+
+
 def _load() -> dict:
+    """🔴 A MISSING LEDGER IS A FIRST RUN. AN UNREADABLE ONE IS A FAULT.
+
+    Found by the Grok Bot QA Engineer 2026-08-16, same shape as bts_oa_api: swallowing the read
+    error returned a blank ledger, which reads as $0 spent, which reads as permission — on an
+    account that auto-reloads $5 at a time. Its words: "a missing sgh_spend.json is not a brake,
+    it is a reset."
+    """
+    if not os.path.exists(LEDGER_FILE):
+        return {}
     try:
-        d = json.load(open(LEDGER_FILE))
-    except Exception:
-        d = {}
-    if d.get("month") != _month():
-        d = {"month": _month(), "WORK": 0.0, "POLL": 0.0,
-             "calls": 0, "tool_calls": 0, "recent": [], "unpriced": 0,
-             "tok_in": 0, "tok_out": 0, "tok_reason": 0, "hist": [],
-             "tok_cached": 0, "usd_saved": 0.0}
-    for k, v in (("WORK", 0.0), ("POLL", 0.0), ("calls", 0),
-                 ("tool_calls", 0), ("recent", []), ("unpriced", 0),
-                 ("tok_in", 0), ("tok_out", 0), ("tok_reason", 0), ("hist", []),
-                 ("tok_cached", 0), ("usd_saved", 0.0)):
-        d.setdefault(k, v)
-    return d
+        with open(LEDGER_FILE, encoding="utf-8") as fh:
+            d = json.load(fh)
+    except Exception as e:                                            # noqa: BLE001
+        raise LedgerUnreadable(
+            "%s exists and cannot be read (%s). REFUSING to treat that as $0 spent — this account "
+            "tops itself up, so an unreadable ledger would spend with the budget control off."
+            % (LEDGER_FILE, e))
+    return d if isinstance(d, dict) else {}
 
 
 def _save(d: dict) -> None:

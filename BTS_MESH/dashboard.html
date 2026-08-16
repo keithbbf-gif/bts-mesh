@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>BTS MESH // MISSION CONTROL</title>
+<style>
+:root{
+  --bg:#05060f; --panel:#0b1022; --edge:#1b2450;
+  --cyan:#22e3ff; --mag:#ff4fd8; --amber:#ffb347; --green:#4dff9e; --red:#ff4d6d;
+  --ink:#cfe3ff; --dim:#5f6ea0;
+  --glow:0 0 8px currentColor,0 0 18px currentColor;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
+  font-family:"Consolas","SF Mono",ui-monospace,monospace;overflow:hidden}
+#scan{position:fixed;inset:0;pointer-events:none;z-index:9;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.14) 0 1px,transparent 1px 3px);
+  mix-blend-mode:overlay;animation:flick 6s infinite}
+@keyframes flick{0%,97%{opacity:.5}98%{opacity:.2}100%{opacity:.5}}
+#wrap{height:100%;display:grid;grid-template-rows:auto 1fr auto;gap:10px;padding:12px}
+/* top bar */
+.top{display:flex;align-items:center;justify-content:space-between;
+  border:1px solid var(--edge);border-radius:10px;padding:8px 14px;background:linear-gradient(180deg,#0a1030,#070a1c)}
+.brand{font-weight:800;letter-spacing:3px;font-size:20px;color:var(--cyan);text-shadow:var(--glow)}
+.brand small{color:var(--mag);letter-spacing:2px}
+.badge{display:flex;gap:14px;align-items:center;font-size:12px;color:var(--dim)}
+.led{width:11px;height:11px;border-radius:50%;background:var(--green);box-shadow:var(--glow);color:var(--green);animation:pulse 1.4s infinite}
+@keyframes pulse{50%{opacity:.35}}
+.clock{color:var(--green);text-shadow:var(--glow);font-variant-numeric:tabular-nums}
+/* main grid */
+.main{display:grid;grid-template-columns:1.1fr 1.4fr 1.1fr;gap:10px;min-height:0}
+.col{display:flex;flex-direction:column;gap:10px;min-height:0}
+.card{border:1px solid var(--edge);border-radius:10px;background:
+  radial-gradient(120% 120% at 0 0,#0d1430,#080b1c);padding:10px 12px;position:relative}
+.card h3{margin:0 0 8px;font-size:11px;letter-spacing:2px;color:var(--dim);text-transform:uppercase}
+/* node bay */
+.node{display:flex;gap:12px;align-items:center}
+.node .ring{position:relative;width:74px;height:74px;flex:0 0 auto}
+.node .name{font-weight:800;letter-spacing:1.5px;font-size:15px}
+.node .sub{font-size:10px;color:var(--dim);margin-top:2px}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.chip{font-size:9px;padding:2px 6px;border:1px solid var(--edge);border-radius:20px;color:var(--dim)}
+.cost{height:6px;border-radius:6px;background:#0a0f28;margin-top:7px;overflow:hidden;border:1px solid var(--edge)}
+.cost i{display:block;height:100%;width:33%}
+.n-cyan{color:var(--cyan)} .n-mag{color:var(--mag)} .n-amb{color:var(--amber)}
+/* gauges row */
+.gauges{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.g{display:flex;flex-direction:column;align-items:center;gap:2px}
+.g .val{font-size:15px;font-weight:800;text-shadow:var(--glow)}
+.g .lbl{font-size:9px;color:var(--dim);letter-spacing:1px}
+/* knobs */
+.knobs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.knob{cursor:ns-resize;user-select:none}
+.knob .k-val{font-size:13px;font-weight:800;color:var(--amber);text-shadow:var(--glow)}
+.knob .k-lbl{font-size:9px;color:var(--dim);letter-spacing:1px;margin-top:2px}
+/* center core */
+.core{flex:1;display:flex;align-items:center;justify-content:center;min-height:180px}
+/* ticker */
+.tick{flex:1;min-height:0;overflow:hidden;font-size:11px;line-height:1.55}
+.tick .row{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:0;transform:translateX(-8px);
+  animation:in .5s forwards}
+@keyframes in{to{opacity:1;transform:none}}
+.t-type{font-weight:800;padding:0 6px;border-radius:4px;font-size:10px}
+.reg{width:100%;border-collapse:collapse;font-size:10px}
+.reg td{padding:3px 4px;border-bottom:1px solid var(--edge);color:var(--ink)}
+.reg .st{font-size:9px;padding:1px 5px;border-radius:10px}
+.foot{display:flex;gap:16px;justify-content:space-between;align-items:center;
+  border:1px solid var(--edge);border-radius:10px;padding:6px 14px;font-size:11px;color:var(--dim)}
+.big{font-size:18px;font-weight:800;text-shadow:var(--glow)}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+</style>
+</head>
+<body>
+<div id="scan"></div>
+<h2 class="sr-only">BTS Mesh mission-control dashboard showing three AI nodes, live signal traffic, gauges and control knobs.</h2>
+<div id="wrap">
+  <div class="top">
+    <div class="brand">BTS&nbsp;MESH <small>// MISSION CONTROL</small></div>
+    <div class="badge">
+      <span>BUS <b style="color:var(--green)">ONLINE</b></span>
+      <span>DUPLEX <b style="color:var(--green)">FULL</b></span>
+      <span>FAULT-TOL <b style="color:var(--green)">ARMED</b></span>
+      <span class="led"></span><span class="clock" id="clock">--:--:--</span>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- LEFT: nodes -->
+    <div class="col">
+      <div class="card">
+        <h3>Nodes // 3 online</h3>
+        <div id="nodes"></div>
+      </div>
+      <div class="card">
+        <h3>Control knobs</h3>
+        <div class="knobs">
+          <div class="knob" data-k="poll" data-min="1" data-max="600" data-v="120" data-suf="s">
+            <svg viewBox="0 0 60 60" width="58" height="58"></svg><div class="k-val">120s</div><div class="k-lbl">POLL</div></div>
+          <div class="knob" data-k="ttl" data-min="60" data-max="3600" data-v="900" data-suf="s">
+            <svg viewBox="0 0 60 60" width="58" height="58"></svg><div class="k-val">900s</div><div class="k-lbl">TTL</div></div>
+          <div class="knob" data-k="cost" data-min="0" data-max="100" data-v="70" data-suf="%">
+            <svg viewBox="0 0 60 60" width="58" height="58"></svg><div class="k-val">70%</div><div class="k-lbl">COST-BIAS</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CENTER: core + gauges -->
+    <div class="col">
+      <div class="card" style="flex:1;display:flex;flex-direction:column">
+        <h3>Signal core // ROLD bus</h3>
+        <div class="core"><svg id="core" viewBox="0 0 360 260" width="100%" height="100%"></svg></div>
+      </div>
+      <div class="card">
+        <h3>Telemetry</h3>
+        <div class="gauges">
+          <div class="g"><svg class="gg" data-g="thru" viewBox="0 0 80 60" width="92"></svg><div class="val n-cyan" id="v-thru">0</div><div class="lbl">THROUGHPUT/s</div></div>
+          <div class="g"><svg class="gg" data-g="lat" viewBox="0 0 80 60" width="92"></svg><div class="val n-mag" id="v-lat">0</div><div class="lbl">LATENCY ms</div></div>
+          <div class="g"><svg class="gg" data-g="tok" viewBox="0 0 80 60" width="92"></svg><div class="val n-amb" id="v-tok">0</div><div class="lbl">TOKEN-OPT %</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: ticker + registry + discovery -->
+    <div class="col">
+      <div class="card" style="flex:1;display:flex;flex-direction:column;min-height:0">
+        <h3>Signal log // live</h3>
+        <div class="tick" id="tick"></div>
+      </div>
+      <div class="card">
+        <h3>Session registry</h3>
+        <table class="reg" id="reg"></table>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <span>DEAD-LETTER <b class="big" id="dl" style="color:var(--red)">0</b></span>
+    <span>CLASSES DISCOVERED <b class="big" id="disc" style="color:var(--green)">14</b></span>
+    <span>QUEUE <b class="big" id="q" style="color:var(--cyan)">0</b></span>
+    <span>UPTIME <b class="big" id="up" style="color:var(--ink)">00:00</b></span>
+    <span style="color:var(--dim)">contract v1.1 · atomic-write · append-only · idempotent</span>
+  </div>
+</div>
+
+<script>
+const NODES=[
+ {id:"cowork",name:"COWORK",sub:"Claude · verify/synthesize · cowork-native",cls:"n-cyan",col:"#22e3ff",cost:.9,
+  tags:["verify","synthesis","orchestrate","code"]},
+ {id:"sgh",name:"SGH",sub:"Grok · web/github sweep · chrome-bridge",cls:"n-mag",col:"#ff4fd8",cost:.32,
+  tags:["web-search","github","literature","cataloging"]},
+ {id:"copilot",name:"COPILOT",sub:"MS365 · office/docs · app-or-web",cls:"n-amb",col:"#ffb347",cost:.34,
+  tags:["office","docs","excel","drafting"]},
+];
+const TYPES={NEW_OUTPUT_READY:"#4dff9e",QUESTION_FOR_YOU:"#22e3ff",NEEDS_INPUT:"#ffb347",
+ TASK_COMPLETE:"#8aa0ff",ACK:"#5f6ea0",SPAWN_SESSION:"#ff4fd8",STATUS:"#39527f",ERROR:"#ff4d6d"};
+const PATHS=["SGH_returns/BTS-B_toolkit_mining.md","CH5/section_4.md","ROLD/q_charging.md",
+ "SESSION_SEED_litsweep.md","SGH_returns/batchC_proto.md","nodes/copilot.json"];
+const NOTES=["batch mining done","which figure ref?","blocked on calibration","idle now",
+ "read+integrated","spin up lit sweep","progress 60%","rclone console closed"];
+
+/* node bay render */
+function ringSVG(col){return `<svg viewBox="0 0 74 74"><circle cx="37" cy="37" r="30" fill="none" stroke="#132043" stroke-width="6"/>
+ <circle class="arc" cx="37" cy="37" r="30" fill="none" stroke="${col}" stroke-width="6" stroke-linecap="round"
+ stroke-dasharray="188" stroke-dashoffset="120" transform="rotate(-90 37 37)" style="filter:drop-shadow(0 0 6px ${col})"/>
+ <circle class="dot" cx="37" cy="9" r="4" fill="${col}" style="filter:drop-shadow(0 0 6px ${col})"/></svg>`}
+document.getElementById("nodes").innerHTML=NODES.map(n=>`
+ <div class="node" style="margin:6px 0">
+   <div class="ring" data-ring="${n.id}">${ringSVG(n.col)}</div>
+   <div style="flex:1">
+     <div class="name ${n.cls}">${n.name} <span style="font-size:9px;color:var(--dim)">● LIVE</span></div>
+     <div class="sub">${n.sub}</div>
+     <div class="chips">${n.tags.map(t=>`<span class="chip">${t}</span>`).join("")}</div>
+     <div class="cost"><i style="width:${Math.round(n.cost*100)}%;background:${n.col};box-shadow:0 0 8px ${n.col}"></i></div>
+   </div>
+ </div>`).join("");
+
+/* gauges (semicircle) */
+function gauge(el){const c=el.dataset.col||"#22e3ff";el.innerHTML=`
+ <path d="M8 54 A32 32 0 0 1 72 54" fill="none" stroke="#132043" stroke-width="7"/>
+ <path class="fill" d="M8 54 A32 32 0 0 1 72 54" fill="none" stroke="${c}" stroke-width="7" stroke-linecap="round"
+   stroke-dasharray="100.5" stroke-dashoffset="100" style="filter:drop-shadow(0 0 5px ${c})"/>
+ <line class="ndl" x1="40" y1="54" x2="40" y2="26" stroke="#fff" stroke-width="2" transform="rotate(-90 40 54)"/>`}
+const gcol={thru:"#22e3ff",lat:"#ff4fd8",tok:"#ffb347"};
+document.querySelectorAll(".gg").forEach(g=>{g.dataset.col=gcol[g.dataset.g];gauge(g)});
+function setGauge(g,frac){frac=Math.max(0,Math.min(1,frac));
+ const f=g.querySelector(".fill");f.style.strokeDashoffset=100.5*(1-frac);
+ const ndl=g.querySelector(".ndl");ndl.setAttribute("transform",`rotate(${-90+frac*180} 40 54)`)}
+
+/* knobs */
+function knobSVG(el){el.querySelector("svg").innerHTML=`
+ <circle cx="30" cy="30" r="22" fill="#0a0f28" stroke="#1b2450" stroke-width="2"/>
+ <circle cx="30" cy="30" r="22" fill="none" stroke="#ffb347" stroke-width="2" stroke-dasharray="138"
+   stroke-dashoffset="138" class="krng" transform="rotate(135 30 30)" style="filter:drop-shadow(0 0 5px #ffb347)"/>
+ <line class="kp" x1="30" y1="30" x2="30" y2="13" stroke="#ffb347" stroke-width="3" stroke-linecap="round"
+   style="filter:drop-shadow(0 0 4px #ffb347)"/>`}
+function drawKnob(el){const min=+el.dataset.min,max=+el.dataset.max,v=+el.dataset.v;
+ const frac=(v-min)/(max-min),ang=-135+frac*270;
+ el.querySelector(".kp").setAttribute("transform",`rotate(${ang} 30 30)`);
+ el.querySelector(".krng").style.strokeDashoffset=138*(1-frac);
+ el.querySelector(".k-val").textContent=(el.dataset.k==="ttl"?Math.round(v/60)+"m":Math.round(v)+el.dataset.suf)}
+document.querySelectorAll(".knob").forEach(el=>{knobSVG(el);drawKnob(el);
+ let dragging=false,sy=0,sv=0;
+ el.addEventListener("pointerdown",e=>{dragging=true;sy=e.clientY;sv=+el.dataset.v;el.setPointerCapture(e.pointerId)});
+ el.addEventListener("pointermove",e=>{if(!dragging)return;const min=+el.dataset.min,max=+el.dataset.max;
+   let nv=sv+(sy-e.clientY)/120*(max-min);nv=Math.max(min,Math.min(max,nv));el.dataset.v=nv;drawKnob(el)});
+ el.addEventListener("pointerup",()=>dragging=false)});
+
+/* central core: nodes around a bus, animated pulses */
+const core=document.getElementById("core");
+const C={x:180,y:130},R=92;
+const pos=NODES.map((n,i)=>{const a=-Math.PI/2+i*2*Math.PI/3;return{...n,x:C.x+R*Math.cos(a),y:C.y+R*Math.sin(a)}});
+core.innerHTML=`
+ ${pos.map(p=>`<line x1="${C.x}" y1="${C.y}" x2="${p.x}" y2="${p.y}" stroke="#182247" stroke-width="2"/>`).join("")}
+ <circle cx="${C.x}" cy="${C.y}" r="30" fill="#0a1130" stroke="#22e3ff" stroke-width="2" style="filter:drop-shadow(0 0 10px #22e3ff)"/>
+ <text x="${C.x}" y="${C.y-2}" fill="#22e3ff" font-size="10" text-anchor="middle" font-weight="800">ROLD</text>
+ <text x="${C.x}" y="${C.y+11}" fill="#5f6ea0" font-size="8" text-anchor="middle">BUS</text>
+ ${pos.map(p=>`<circle cx="${p.x}" cy="${p.y}" r="20" fill="#0b1330" stroke="${p.col}" stroke-width="2" style="filter:drop-shadow(0 0 8px ${p.col})"/>
+   <text x="${p.x}" y="${p.y+3}" fill="${p.col}" font-size="9" text-anchor="middle" font-weight="800">${p.name.slice(0,4)}</text>`).join("")}
+ <g id="pulses"></g>`;
+function firePulse(){const p=pos[Math.floor(Math.random()*pos.length)];const inbound=Math.random()<.5;
+ const x1=inbound?p.x:C.x,y1=inbound?p.y:C.y,x2=inbound?C.x:p.x,y2=inbound?C.y:p.y;
+ const c=inbound?p.col:"#22e3ff";const g=document.getElementById("pulses");
+ const dot=document.createElementNS("http://www.w3.org/2000/svg","circle");
+ dot.setAttribute("r","3.5");dot.setAttribute("fill",c);dot.setAttribute("cx",x1);dot.setAttribute("cy",y1);
+ dot.style.filter=`drop-shadow(0 0 6px ${c})`;g.appendChild(dot);
+ const t0=performance.now(),dur=520;
+ (function anim(t){const k=Math.min(1,(t-t0)/dur);dot.setAttribute("cx",x1+(x2-x1)*k);dot.setAttribute("cy",y1+(y2-y1)*k);
+   dot.setAttribute("opacity",1-k*.3);if(k<1)requestAnimationFrame(anim);else dot.remove()})(t0);
+ const ring=document.querySelector(`[data-ring="${p.id}"] .arc`);
+ if(ring){ring.style.strokeDashoffset=40+Math.random()*120}}
+
+/* ticker */
+const tick=document.getElementById("tick");
+function addSignal(){const ty=Object.keys(TYPES)[Math.floor(Math.random()*8)];const col=TYPES[ty];
+ const who=NODES[Math.floor(Math.random()*3)].name;
+ const path=PATHS[Math.floor(Math.random()*PATHS.length)];const note=NOTES[Math.floor(Math.random()*NOTES.length)];
+ const time=new Date().toLocaleTimeString('en-GB');
+ const row=document.createElement("div");row.className="row";
+ row.innerHTML=`<span style="color:#39527f">${time}</span> <span style="color:#8aa0ff">${who}</span> `+
+  `<span class="t-type" style="background:${col}22;color:${col};border:1px solid ${col}55">${ty}</span> `+
+  `<span style="color:#7f90c0">${note}</span> <span style="color:#39527f">${ty==='ERROR'?'⚠':path}</span>`;
+ tick.prepend(row);while(tick.children.length>14)tick.lastChild.remove();
+ if(ty==='ERROR'){dead++;document.getElementById("dl").textContent=dead}
+ qd=Math.max(0,qd+(Math.random()<.5?1:-1));document.getElementById("q").textContent=qd}
+
+/* registry */
+const REG=[["cowork:main","cowork","active","#4dff9e"],["sgh:litsweep","sgh","working","#22e3ff"],
+ ["copilot:docs","copilot","idle","#ffb347"],["sgh:batchB","sgh","requested","#8aa0ff"]];
+document.getElementById("reg").innerHTML=REG.map(r=>`<tr><td style="color:#8aa0ff">${r[0]}</td>
+ <td>${r[1]}</td><td><span class="st" style="background:${r[3]}22;color:${r[3]};border:1px solid ${r[3]}55">${r[2]}</span></td></tr>`).join("");
+
+/* live loop */
+let dead=0,qd=2,disc=14,t=0;
+const start=Date.now();
+setInterval(()=>{document.getElementById("clock").textContent=new Date().toLocaleTimeString('en-GB');
+ const s=Math.floor((Date.now()-start)/1000);
+ document.getElementById("up").textContent=String(Math.floor(s/60)).padStart(2,'0')+":"+String(s%60).padStart(2,'0')},1000);
+setInterval(()=>{firePulse();if(Math.random()<.7)addSignal()},680);
+setInterval(()=>{t+=.6;
+ setGauge(document.querySelector('[data-g="thru"]'),.45+.35*Math.sin(t));document.getElementById("v-thru").textContent=(6+Math.round(5+4*Math.sin(t)));
+ setGauge(document.querySelector('[data-g="lat"]'),.3+.25*Math.abs(Math.sin(t*.7)));document.getElementById("v-lat").textContent=(40+Math.round(30*Math.abs(Math.sin(t*.7))));
+ setGauge(document.querySelector('[data-g="tok"]'),.7+.15*Math.sin(t*.5));document.getElementById("v-tok").textContent=(70+Math.round(12*Math.sin(t*.5)))},700);
+setInterval(()=>{if(Math.random()<.25){disc++;document.getElementById("disc").textContent=disc}},4000);
+</script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+{
+ "when": "2026-08-16T13:08:14",
+ "_README": "Feed for KDash's top-bar meter rack. sgh_api and oa_api are EXACT \u2014 both vendors return per-call usage. gem_api is a calibrated estimate; the Claude/SGH quota pools are human-posted, because those vendors are UI-only for spend (measured 2026-07-16, re-confirmed for Claude 2026-08-12). A pool that is ABSENT here renders grey 'no data' \u2014 that is correct, never fill it in. \u26a0 oa_api is the only pool whose ceiling is OURS: the OpenAI account auto-reloads, so it fails OPEN and MONTHLY_BUDGET_USD is the brake.",
+ "meters": {
+  "sgh_api": {
+   "used": 7.1464,
+   "cap": 10.0,
+   "unit": "usd",
+   "reset_epoch": 1788238799,
+   "estimate": false,
+   "src": "sgh_spend.json \u2014 EXACT, xAI returns cost_in_usd_ticks per call. $10/mo hard stop. Grounded search REFUSED without spend_ok=<usd>."
+  },
+  "gem_api": {
+   "used": 53.7318,
+   "cap": 300.0,
+   "unit": "usd",
+   "estimate": true,
+   "src": "vertex_usage.json RAW x 6.32x (stale) from calibration.json. RECONCILED 2026-07-16: console $300.00->$299.91 proved the credit DOES pay for Vertex; the same read showed our raw ledger runs 2.39x LOW. Credit EXPIRES 2026-10-13 \u2014 the DATE is the binding limit, not the money."
+  },
+  "oa_api": {
+   "used": 9.1865,
+   "cap": 25.0,
+   "unit": "usd",
+   "reset_epoch": 1788238799,
+   "estimate": false,
+   "src": "oa_api_spend.json \u2014 EXACT, OpenAI returns a usage block per call and bts_oa_api prices it against the measured publisher table (terra $2/$12, luna $0.20/$1.20, sol $5/$30 per MTok). 1.05M context in, 128K max out. 27 call(s) this month. \u26a0 THE CAP IS OURS, NOT THE ACCOUNT'S: auto-reload is ON ($20 -> $50, tier cap $500/mo), so this pool fails OPEN and MONTHLY_BUDGET_USD is the only brake. MAX_CALL_USD $3.50 refuses on the ESTIMATE, before the spend."
+  },
+  "claude_quota": {
+   "used": 7,
+   "cap": 100,
+   "unit": "pct",
+   "reset_epoch": 1784219448,
+   "posted_at": "2026-07-16 10:58 CT",
+   "src": "Claude usage page, Max (20x). TWO WINDOWS, TWO CLOCKS \u2014 this pill shows the BINDING one: SESSION 7% used, resets in 32 min (11:30 CT). The other: WEEKLY all-models 3% used, resets Sun 6:59 AM. FABLE weekly 0% \u2014 never used, so a Fable CH4 review starts from a full tank. Opus draws THIS quota, not the dollar credits, which is why the credits number is static. \u270b POSTED BY KEITH \u2014 UI-only, no API exposes this.  read on 2026-07-16 10:58 CT",
+   "estimate": false
+  },
+  "claude_credits": {
+   "used": 242.64,
+   "cap": 250,
+   "unit": "usd",
+   "reset_epoch": 1785560400,
+   "posted_at": "2026-07-16 10:58 CT",
+   "src": "Claude usage page. $242.64 spent of the $250.00 MONTHLY SPEND LIMIT = 97% used -> $7.36 left until Aug 1. \u26a0 DO NOT CONFUSE WITH 'Current balance $148.24 \u00b7 Auto-reload On': the BALANCE is prepaid funds sitting there and auto-reload keeps topping it up, but the $250 MONTHLY SPEND LIMIT is what actually BINDS. That cap is why this wallet now fails SAFE \u2014 it was formerly 'Unlimited' + auto-reload, i.e. the only pool in the mesh that failed OPEN. Keith capped it. Static in practice: Opus consumes quota, not credits. \u270b POSTED BY KEITH \u2014 UI-only, no API exposes this.  read on 2026-07-16 10:58 CT",
+   "estimate": false
+  },
+  "sgh_quota": {
+   "used": 0,
+   "cap": 100,
+   "unit": "pct",
+   "reset_epoch": 1784241300,
+   "posted_at": "2026-07-16 11:02 CT",
+   "src": "grok.com Usage \u2014 'Weekly SuperGrok Heavy Limit: 0% used, Resets July 16 2026 at 5:35 PM' (today, in ~6.5h). SUPERSEDES the 15% read on 07-12 (Voice 10 + Chat 5) \u2014 that window has since rolled. Extra Usage Credits: $0.00, Auto Top-Up available. TWO THINGS THIS CONFIRMS: (1) the extra-credit balance is $0.00, so the subscription funds NOTHING on the xAI API \u2014 separate billing systems per xAI's own docs; never let a dashboard imply the $100/mo offsets the API bill. (2) 0% used = the SuperGrok Heavy subscription is going UNUSED, exactly as BACKLOG_TOKEN_TRACKING_WIDGET predicted on 07-12: it buys grok.com CHAT, and the mesh retired the browser bridge for the API. Recorded as a fact, not a recommendation \u2014 Keith signed the 3-month promo ($100/mo x3) and it is a done deal. \u270b POSTED BY KEITH \u2014 UI-only, no API exposes this.  read on 2026-07-16 11:02 CT",
+   "estimate": false
+  }
+ }
+}

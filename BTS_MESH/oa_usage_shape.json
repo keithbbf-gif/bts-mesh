@@ -1,0 +1,19 @@
+{
+  "scanned_at": "2026-08-11 21:29:44",
+  "root": "C:\\Users\\Papa\\.codex\\sessions",
+  "rollout_files": 10,
+  "json_lines": 183,
+  "usage_keys": {
+    "payload.info.total_token_usage": "dict",
+    "payload.info.total_token_usage.input_tokens": "int",
+    "payload.info.total_token_usage.cached_input_tokens": "int",
+    "payload.info.total_token_usage.output_tokens": "int",
+    "payload.info.total_token_usage.reasoning_output_tokens": "int",
+    "payload.info.last_token_usage": "dict",
+    "payload.info.last_token_usage.input_tokens": "int",
+    "payload.info.last_token_usage.cached_input_tokens": "int",
+    "payload.info.last_token_usage.output_tokens": "int",
+    "payload.info.last_token_usage.reasoning_output_tokens": "int"
+  },
+  "state": "MEASURED"
+}

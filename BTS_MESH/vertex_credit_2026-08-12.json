@@ -1,0 +1,14 @@
+{
+ "measured": "2026-08-12",
+ "source": "Google Cloud Billing > Reports, joanna.bbf billing account, banner + summary",
+ "banner": "Free trial status: $286.07 credit and 62 days remaining",
+ "remaining_usd": 286.07,
+ "granted_usd": 300.0,
+ "spent_to_date_usd": 13.93,
+ "month_to_date_usd": 10.96,
+ "month_forecast_usd": 11.24,
+ "only_service": "Vertex AI",
+ "expiry_from_banner": "2026-10-13",
+ "expiry_recorded": "2026-10-13",
+ "expiry_agrees": true
+}

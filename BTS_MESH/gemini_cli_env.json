@@ -1,0 +1,10 @@
+{
+ "env": {
+  "GOOGLE_CLOUD_PROJECT": "project-5a33f910-1251-4d6a-bf9",
+  "GOOGLE_CLOUD_LOCATION": "global",
+  "GOOGLE_GENAI_USE_VERTEXAI": "true"
+ },
+ "measured": "2026-08-16",
+ "account": "joanna.bbf@gmail.com",
+ "note": "Required env for the gemini CLI. ADC supplies the credential; these supply the project and region. Both are needed."
+}

@@ -1,0 +1,13 @@
+{
+  "month": "2026-07",
+  "credits": 0.0,
+  "calls": 1,
+  "unpriced": 1,
+  "hist": [
+    {
+      "t": 1785467015,
+      "task": "selftest-unpriced",
+      "UNPRICED": true
+    }
+  ]
+}

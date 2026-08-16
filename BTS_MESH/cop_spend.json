@@ -1,0 +1,56 @@
+{
+  "month": "2026-08",
+  "credits": 1.03,
+  "calls": 8,
+  "unpriced": 6,
+  "hist": [
+    {
+      "t": 1785749043,
+      "task": "mesh_fanout",
+      "UNPRICED": true
+    },
+    {
+      "t": 1785749343,
+      "task": "mesh_fanout",
+      "UNPRICED": true
+    },
+    {
+      "t": 1785749343,
+      "task": "mesh_fanout",
+      "UNPRICED": true
+    },
+    {
+      "t": 1785749343,
+      "task": "mesh_fanout",
+      "UNPRICED": true
+    },
+    {
+      "t": 1786864116,
+      "task": "mesh_fanout",
+      "UNPRICED": true
+    },
+    {
+      "t": 1786864517,
+      "task": "mesh_fanout",
+      "UNPRICED": true
+    },
+    {
+      "t": 1786864750,
+      "task": "mesh_fanout",
+      "credits": 0.45,
+      "secs": 7,
+      "tok_in": 18200.0,
+      "tok_cached": 1400.0,
+      "tok_out": 146.0
+    },
+    {
+      "t": 1786870817,
+      "task": "mesh_fanout",
+      "credits": 0.58,
+      "secs": 12,
+      "tok_in": 18200.0,
+      "tok_cached": 1400.0,
+      "tok_out": 790.0
+    }
+  ]
+}

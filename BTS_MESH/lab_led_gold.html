@@ -1,0 +1,68 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>BTS LAB — LED burn + Au synchrotron</title>
+<style>
+html,body{margin:0;height:100%;background:#05060f}
+#lg{--edge:#1b2450;--ink:#cfe3ff;--dim:#5f6ea0;--gold:#ffcf5a;--cyan:#22e3ff;
+ background:#05060f;padding:16px;font-family:"Consolas",ui-monospace,monospace;color:var(--ink);
+ display:grid;grid-template-columns:1fr 1fr;gap:14px;height:calc(100% - 32px)}
+#lg .pane{border:1px solid var(--edge);border-radius:10px;padding:12px;position:relative;overflow:hidden;display:flex;flex-direction:column}
+#lg .pL{background:radial-gradient(120% 120% at 50% 0,#0d1430,#070a1c)}
+#lg .pR{background:radial-gradient(120% 120% at 50% 0,#20180a,#0b0904);border-color:#5a4a1e}
+#lg h3{margin:0 0 8px;font-size:13px;letter-spacing:2px;text-transform:uppercase}
+#lg .pL h3{color:var(--cyan)}#lg .pR h3{color:var(--gold);text-shadow:0 0 8px #ffcf5a55}
+#lg .cells{flex:1;display:flex;gap:20px;align-items:center;justify-content:center}
+#lg .cell{width:150px;text-align:center}
+#lg .dev{position:relative;height:150px;border-radius:8px;overflow:hidden;border:1px solid #2a3560;background:linear-gradient(180deg,#0a1130,#060814)}
+#lg .emis{position:absolute;left:14%;right:14%;top:24%;height:44%;border-radius:6px;background:#111}
+#lg .cath{position:absolute;left:8%;right:8%;bottom:6%;height:12%;background:#3a3f55;border-radius:3px}
+#lg .ito{position:absolute;left:8%;right:8%;top:8%;height:8%;background:#12405a;border-radius:3px}
+#lg .lbl{font-size:11px;color:var(--dim);margin-top:8px}#lg .lbl b{display:block;font-size:13px;letter-spacing:1px}
+#lg .meter{height:6px;background:#0a0f28;border:1px solid var(--edge);border-radius:5px;margin-top:6px;overflow:hidden}
+#lg .meter i{display:block;height:100%;width:0}
+#lg .status{font-size:10px;margin-top:5px;letter-spacing:1px}
+#lg .spark{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .1s}
+#lg svg{width:100%;height:100%}#lg .cap{font-size:10px;color:var(--dim);margin-top:8px;text-align:center}
+</style></head><body>
+<div id="lg">
+  <div class="pane pL"><h3>Emission // MEH-PPV · PF pixels</h3>
+    <div class="cells">
+      <div class="cell"><div class="dev"><div class="ito"></div><div class="emis" id="e1"></div><div class="cath"></div><div class="spark" id="s1"></div></div>
+        <div class="lbl"><b style="color:#ff7a45">MEH-PPV</b>λ≈590nm · orange-red</div><div class="meter"><i id="m1"></i></div><div class="status" id="st1"></div></div>
+      <div class="cell"><div class="dev"><div class="ito"></div><div class="emis" id="e2"></div><div class="cath"></div><div class="spark" id="s2"></div></div>
+        <div class="lbl"><b style="color:#4da6ff">POLYFLUORENE</b>λ≈440nm · blue→green</div><div class="meter"><i id="m2"></i></div><div class="status" id="st2"></div></div>
+    </div><div class="cap">bias ↑ → radiative recombination → current stress → keto-defect / burn-out → dark</div></div>
+  <div class="pane pR"><h3>Synchrotron UPS // Au reference</h3>
+    <svg id="spec" viewBox="0 0 300 220" preserveAspectRatio="none"></svg>
+    <div class="cap">hν = 60 eV · Au 5d doublet + Fermi edge · CAMD-style sweep</div></div>
+</div>
+<script>
+(function(){
+function dev(eEl,mEl,stEl,sEl,base,greenShift){let ph=0,t=0;
+ const el=document.getElementById(eEl),m=document.getElementById(mEl),st=document.getElementById(stEl),sp=document.getElementById(sEl);
+ function set(col,glow,I){el.style.background=col;el.style.boxShadow="0 0 "+glow+"px "+Math.round(glow*.6)+"px "+col;m.style.width=Math.round(I*100)+"%";}
+ function flash(){sp.style.background="radial-gradient(circle at 50% 45%,#fff,#ffce8a 30%,transparent 60%)";sp.style.opacity=1;setTimeout(()=>sp.style.opacity=0,120);}
+ setInterval(()=>{t+=0.03;
+  if(ph===0){const I=Math.min(1,t);set(base(0),I*24,I);st.textContent="⚡ BIAS ON";st.style.color="#4dff9e";if(t>=1){ph=1;t=0;}}
+  else if(ph===1){const fl=0.9+0.1*Math.sin(t*7);set(base(greenShift?Math.min(.6,t*.05):0),24*fl,fl);st.textContent="● EMITTING";st.style.color="#4dff9e";m.style.background="#4dff9e";if(t>6){ph=2;t=0;}}
+  else if(ph===2){const j=Math.random(),dim=1-t*0.12;set(base(greenShift?.7:0),Math.max(2,22*dim*(j>.2?1:.4)),Math.max(0,dim));st.textContent="▲ CURRENT STRESS";st.style.color="#ffb347";m.style.background="#ffb347";if(t>3){ph=3;t=0;flash();}}
+  else if(ph===3){const j=Math.random();set(j>.6?"#3a1a10":"#140a08",j>.6?8:1,0.15*j);el.style.filter="contrast(1.3)";st.textContent="✖ BURN-OUT";st.style.color="#ff4d6d";m.style.background="#ff4d6d";m.style.width=(10*j)+"%";if(t>1.6){ph=4;t=0;}}
+  else if(ph===4){set("#0d0705",0,0);el.style.filter="none";st.textContent="○ DARK — dead pixel";st.style.color="#5f6ea0";m.style.width="0%";if(t>1.4){ph=0;t=0;}}},30);}
+dev("e1","m1","st1","s1",g=>"#ff6a2e",false);
+dev("e2","m2","st2","s2",g=>{const gg=Math.max(0,Math.min(1,g/0.7));return "rgb("+Math.round(40+gg*40)+","+Math.round(120+gg*120)+","+Math.round(255-gg*180)+")";},true);
+const spec=document.getElementById("spec"),x0=30,x1=290,y0=14,y1=190;
+function intensity(BE){const fermi=1/(1+Math.exp((BE)/0.15));const d1=Math.exp(-Math.pow(BE-3.6,2)/(2*.49));const d2=Math.exp(-Math.pow(BE-6.1,2)/(2*.64));return Math.min(1,0.15*fermi+0.75*d1+0.62*d2+0.12*Math.max(0,BE)/10);}
+function bx(BE){return x1-(10-BE)/11*(x1-x0);}function by(I){return y1-I*(y1-y0);}
+let g='<rect x="'+x0+'" y="'+y0+'" width="'+(x1-x0)+'" height="'+(y1-y0)+'" fill="#0e0b04" stroke="#5a4a1e"/>';
+for(let be=0;be<=10;be+=2){const X=bx(be);g+='<line x1="'+X+'" y1="'+y0+'" x2="'+X+'" y2="'+y1+'" stroke="#3a3112"/><text x="'+X+'" y="'+(y1+12)+'" fill="#b79a4a" font-size="8" text-anchor="middle">'+be+'</text>';}
+g+='<line x1="'+bx(0)+'" y1="'+y0+'" x2="'+bx(0)+'" y2="'+y1+'" stroke="#ffcf5a" stroke-dasharray="3 3" opacity=".7"/><text x="'+bx(0)+'" y="'+(y0-3)+'" fill="#ffcf5a" font-size="8" text-anchor="middle">E_F</text>';
+g+='<text x="'+((x0+x1)/2)+'" y="'+(y1+22)+'" fill="#b79a4a" font-size="8" text-anchor="middle">Binding energy (eV)</text>';
+let pts=[];for(let i=0;i<=220;i++){const BE=10-i/220*11;pts.push([bx(BE),by(intensity(BE)+(Math.random()-.5)*0.02)]);}
+const dP="M"+pts.map(p=>p[0].toFixed(1)+" "+p[1].toFixed(1)).join(" L");
+g+='<path d="'+dP+'" fill="none" stroke="#6b5820" stroke-width="1" opacity=".35"/><path id="trace" d="'+dP+'" fill="none" stroke="#ffd970" stroke-width="2.2" style="filter:drop-shadow(0 0 5px #ffcf5a)"/>';
+g+='<line id="cur" x1="'+x0+'" y1="'+y0+'" x2="'+x0+'" y2="'+y1+'" stroke="#fff6d5" opacity=".8"/><circle id="curdot" r="3" fill="#fff" style="filter:drop-shadow(0 0 6px #ffcf5a)"/>';
+g+='<text x="278" y="26" fill="#ffcf5a" font-size="8" text-anchor="end">hν=60eV</text>';
+spec.innerHTML=g;const trace=document.getElementById("trace"),cur=document.getElementById("cur"),dot=document.getElementById("curdot"),L=trace.getTotalLength();trace.style.strokeDasharray=L;
+function sweep(){let s=0;trace.style.strokeDashoffset=L;const id=setInterval(()=>{s+=0.02;trace.style.strokeDashoffset=Math.max(0,L*(1-s));const pt=trace.getPointAtLength(Math.min(L,L*s));cur.setAttribute("x1",pt.x);cur.setAttribute("x2",pt.x);dot.setAttribute("cx",pt.x);dot.setAttribute("cy",pt.y);if(s>=1){clearInterval(id);setTimeout(sweep,900);}},28);}sweep();
+})();
+</script></body></html>

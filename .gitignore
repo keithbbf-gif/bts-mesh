@@ -1,10 +1,20 @@
-# nothing here should ever arrive, but a belt as well as braces
-.secrets/
-*secret*
-*token*
-*credential*
-*_spend.json
-*.bak
-Legal/
-**/OA_returns/
-**/_queue/
+# Keith, 2026-08-16: "that's a private repo, push it all there."
+#
+# So this is NOT an allowlist. The whole mesh ships — modules, ledgers, state, registries,
+# raw node returns, env config. The reason the earlier deny-by-default version existed was a
+# near-miss on a PUBLIC repo; keithbbf-gif/bts-mesh is private (confirmed via gh api by the
+# QA Engineer, 2026-08-16), and CLAUDE.md canon is explicit that exposure is Keith's call and
+# that guarding it is friction, not help.
+#
+# ⚠ THE ONE THING THAT WOULD MAKE THIS WRONG IS THE REPO GOING PUBLIC. If it is ever flipped,
+#   the credentials in gemini_cli_env.json and every balance in the ledgers go with it. That is
+#   a property of the REPO, not of this file — so it is recorded here where anyone changing
+#   visibility will be standing.
+
+# Only the things that are noise or actively break a checkout:
+__pycache__/
+*.pyc
+*.guard.bak
+*.lock
+.git/
+~$*

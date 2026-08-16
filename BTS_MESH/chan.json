@@ -1,0 +1,68 @@
+{
+ "internodes": [
+  {
+   "a": "COWORK",
+   "b": "CROSSREF",
+   "ms": 309.5,
+   "col": "#3ddc84",
+   "note": "free, and the fastest rail we have. NEVER ask a model for a DOI."
+  },
+  {
+   "a": "COWORK",
+   "b": "GDX",
+   "ms": 15.2,
+   "col": "#3ddc84",
+   "note": "8 MB: write 18 ms (449 MB/s), read 12 ms (640 MB/s). LOCAL Drive cache \u2014 NOT the cloud round trip a remote node pays (that is bts_gdxbench.py)."
+  },
+  {
+   "a": "COWORK",
+   "b": "ITC",
+   "ms": 214.8,
+   "col": "#FBAD41",
+   "note": "READ ONLY for the nodes. 5 KB in 215 ms = 24 KB/s. Only COWORK can WRITE (R2 keys)."
+  },
+  {
+   "a": "COWORK",
+   "b": "GEM",
+   "ms": 1343.1,
+   "col": "#8b7cff",
+   "note": "Gemini API, free tier. Reply: OK"
+  },
+  {
+   "a": "COWORK",
+   "b": "SGH",
+   "ms": 1288.2,
+   "col": "#ffffff",
+   "note": "grok-4.5 API, UNGROUNDED. month $3.2964/$10.00"
+  },
+  {
+   "a": "COWORK",
+   "b": "SGH\u00b7DOM",
+   "ms": 2093.0,
+   "col": "#8fa0c8",
+   "note": "Chrome bridge. MEASURED 2026-07-13 via DOM observer + a HUMAN-pressed send. TTFT 254 ms, round trip 2093 ms. TRIVIAL PROMPT ONLY. The old '30-90 s' was COWORK's driving overhead, not the wire \u2014 the wire beats both APIs."
+  },
+  {
+   "a": "SGH",
+   "b": "GDX",
+   "ms": 0.0,
+   "col": "#3ddc84",
+   "note": "PROVEN 2026-07-14: SGH AUTHORS FILES TO GDX ON COMMAND (CH4-REVIEW-SGH.md, 5,383 B, correct folder). 'SGH cannot write to GDX' was FALSE and cost a week of routing design. RULES: the write must be its OWN turn (a bare 'write X to Y' — NOT 'write your previous message verbatim', which yields a 79-byte stub); give the folder by ID (1aiMjVZfFtiBGNAlkTwAYiq1Pvuz2F6hA), never by name; and VERIFY BY LISTING THE FOLDER, never by filename and never by its 'DONE'. See SOP_NODE_WRITES.md."
+  },
+  {
+   "a": "GEM",
+   "b": "GDX",
+   "ms": 0.0,
+   "col": "#8b7cff",
+   "note": "NEW RAIL 2026-07-14 (Keith found it): drive.google.com/drive/ai = GEMINI WITH NATIVE DRIVE READ, over the DOM, FREE (promotional; limits/expiry unstated). VERIFIED: read a GDX file back byte-for-byte. It CANNOT create files (says so plainly) — but its 'Export to Docs' button lands a real Google Doc in Drive that Cowork reads via the Drive API. ⇒ THE LOOP CLOSES: SGH writes -> GEM reads/analyses -> Export to Docs -> Cowork reads. A verifiable artifact at every hop, $0, and COWORK'S CONTEXT IS NEVER THE TRANSPORT."
+  },
+  {
+   "a": "SGH",
+   "b": "GBW",
+   "ms": null,
+   "col": "#ff6b6b",
+   "note": "BOTH ARE GROK. Not a channel to optimise \u2014 a correlation to distrust. Never use one to check the other."
+  }
+ ],
+ "measured_at": "2026-07-14T00:02:52"
+}

@@ -51,18 +51,57 @@ def validate(text: str):
 
 
 def safe_write(path, text):
+    """Validate, back up, write, re-read from DISK, and RESTORE if the re-read fails.
+
+    🔴 THE RESTORE WAS MISSING UNTIL 2026-08-16, AND THAT IS THE WHOLE POINT OF THE FUNCTION.
+    It validated the string, copied a .guard.bak, wrote, re-parsed from disk — all correct — and
+    then, on failure, raised and walked away, leaving the broken file in place and the backup
+    untouched. A writer whose safety net is a file nobody restores is a writer with no safety net.
+
+    Found twice, independently, on the same day:
+      · at 03:45 this session, when a JSON-shaped line went into rails.toml. toml_guard REFUSED it,
+        bts_kdash_feed crashed, and bts_health went RED reporting two findings that had nothing to
+        do with either — the whole control layer describing symptoms of a file it could no longer
+        read. The rollback that existed in the calling script was unreachable for the same reason:
+        it covered a rail-COUNT mismatch and a PARSE error jumped straight past it.
+      · by the Grok Bot QA Engineer, in its first pass over the bundle, ranked fifth by silent lie:
+        "safe_write re-parses from disk (good) but on a failed re-parse it raises and leaves the
+        broken file. The .guard.bak is never restored."
+
+    ⇒ A ROLLBACK MUST COVER THE FAILURE YOU DID NOT PREDICT. Not just the one you thought of.
+    """
     ok, msg = validate(text)
     if not ok:
         raise ValueError("REFUSED to write %s: %s" % (path, msg))
     import pathlib, shutil
     p = pathlib.Path(path)
+    bak = p.with_suffix(p.suffix + ".guard.bak")
+    had_backup = False
     if p.exists():
-        shutil.copy2(p, p.with_suffix(p.suffix + ".guard.bak"))
-    with open(p, "w", encoding="utf-8", newline="") as fh:
-        fh.write(text)
-    ok2, msg2 = validate(p.read_bytes().decode("utf-8"))
-    if not ok2:
-        raise ValueError("WROTE AND IT DOES NOT PARSE FROM DISK: %s" % msg2)
+        shutil.copy2(p, bak)
+        had_backup = True
+    try:
+        with open(p, "w", encoding="utf-8", newline="") as fh:
+            fh.write(text)
+        ok2, msg2 = validate(p.read_bytes().decode("utf-8"))
+        if not ok2:
+            raise ValueError("WROTE AND IT DOES NOT PARSE FROM DISK: %s" % msg2)
+    except Exception as e:                                            # noqa: BLE001
+        # ANY failure past this point — parse, encoding, disk full, a truncated write — puts the
+        # original back. The mount has lied about file contents thirteen times; the one thing that
+        # must never happen here is leaving a control file that cannot be read.
+        if had_backup:
+            try:
+                shutil.copy2(bak, p)
+                raise ValueError("%s || ORIGINAL RESTORED from %s — %s is unchanged."
+                                 % (e, bak.name, p.name)) from None
+            except ValueError:
+                raise
+            except Exception as e2:                                   # noqa: BLE001
+                raise ValueError("%s || 🔴 AND THE RESTORE ALSO FAILED (%s). %s IS BROKEN ON DISK. "
+                                 "The backup is at %s." % (e, e2, p, bak)) from None
+        raise ValueError("%s || no backup existed (the file was new), so %s has been removed."
+                         % (e, p.name)) from None
     return True
 
 

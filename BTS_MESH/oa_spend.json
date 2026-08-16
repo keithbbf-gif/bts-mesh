@@ -1,0 +1,43 @@
+{
+  "month": "2026-08",
+  "lanes": {
+    "openai-codex": {
+      "calls": 2,
+      "unpriced": 1,
+      "tok_in": 0,
+      "tok_cached": 0,
+      "tok_out": 0,
+      "tok_reason": 0,
+      "secs": 0.0,
+      "usd": 0.0,
+      "ok_calls": 1
+    },
+    "openai-api": {
+      "calls": 0,
+      "unpriced": 0,
+      "tok_in": 0,
+      "tok_cached": 0,
+      "tok_out": 0,
+      "tok_reason": 0,
+      "secs": 0.0,
+      "usd": 0.0
+    }
+  },
+  "hist": [
+    {
+      "t": 1786499214,
+      "lane": "openai-codex",
+      "task": "first live OA call",
+      "UNPRICED": true,
+      "why": "no usage record and no confirmed shape - run `python bts_oa.py --scan` after this call",
+      "tail": "llback metadata; this can degrade performance and cause issues.\nERROR: {\"type\":\"error\",\"status\":400,\"error\":{\"type\":\"invalid_request_error\",\"message\":\"The 'gpt-5.6' model is not supported when using Codex with a ChatGPT account.\"}}\nERROR: {\"type\":\"error\",\"status\":400,\"error\":{\"type\":\"invalid_request_error\",\"message\":\"The 'gpt-5.6' model is not supported when using Codex with a ChatGPT account.\"}}\n"
+    },
+    {
+      "t": 1786499435,
+      "lane": "openai-codex",
+      "task": "first live OA call",
+      "ok": true,
+      "tok_total": 4373
+    }
+  ]
+}

@@ -876,3 +876,16 @@ STILL OWED ON THIS RAIL:
   rather than host paths. The files are real and on V:; the recorded path is not resolvable on the
   host. Harmless to spend, wrong for anyone following the pointer.
 """
+
+[[surface]]
+name = "GHX"
+job = "GitHub — keithbbf-gif/bts-mesh, PRIVATE. Code review surface for the Grok Bot QA Engineer agent, which watches deploys."
+node_reach = "CoPG/GW/CoW/codex via CLI credential; SGH/GEM/OA reach it only as a URL and hold no token"
+state = "LIVE 2026-08-16 — 141 files pushed, verified from the API not the push output"
+conf = "V"
+measured = 2026-08-16
+owed = """
+Populated by qa_handoff.collect(), an ALLOWLIST — BTS_MESH\\*.py, ROLD\\*.py/.toml/.md. The case record, V:\\Ai\\Legal and .secrets are not in it and cannot be reached by it.
+⚠ The secret scanner did not know GitHub token shapes until 2026-08-16. It guarded five vendors and not the one it publishes TO. A ghp_ in the bundle now aborts the push before the first commit.
+⚠ THE CREDENTIAL IS NOT STORED. Every push uses an inline URL once and then resets the remote; .git/config is checked afterwards and the check is reported. The token Keith supplied was classic, all-powerful and never-expiring, and was destroyed at the end of the run that used it.
+"""

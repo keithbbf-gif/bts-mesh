@@ -1,0 +1,77 @@
+{
+ "surfaces": {
+  "GDX": {
+   "used": 11.71,
+   "free": 88.29,
+   "quota": 100.0,
+   "measured": true,
+   "source": "host disk_usage(X:) + DOM cross-check drive.google.com/drive/u/0/quota — AGREE (2026-07-14)",
+   "note": "Google Drive — the exchange rail. Fast (580 MB/s) and PRIVATE. disk_usage(X:) reports the ACCOUNT quota. DOM read 2026-07-14: '11.71 GB of 100 GB used' — matches host exactly.",
+   "ts": "2026-07-14T00:00:00"
+  },
+  "D:": {
+   "used": 1363.97,
+   "free": 2362.02,
+   "quota": 3725.99,
+   "measured": true,
+   "source": "disk_usage(D:)",
+   "note": "Research2 + PhD library live here. 84 MB/s write.",
+   "ts": "2026-07-13T09:53:36"
+  },
+  "C:": {
+   "used": 748.2,
+   "free": 182.66,
+   "quota": 930.86,
+   "measured": true,
+   "source": "disk_usage(C:)",
+   "note": "System / NVMe. 1416 MB/s write.",
+   "ts": "2026-07-13T09:53:36"
+  },
+  "G:": {
+   "used": 4109.28,
+   "free": 3342.74,
+   "quota": 7452.02,
+   "measured": true,
+   "source": "disk_usage(G:)",
+   "note": "Tera mirror. 31 MB/s write — the slowest surface we own.",
+   "ts": "2026-07-13T09:53:36"
+  },
+  "ODX": {
+   "used": 105.5,
+   "free": 918.5,
+   "quota": 1024.0,
+   "measured": false,
+   "source": "Keith read it from the OneDrive client, 2026-07-13 (DOM refresh blocked: onedrive.live.com required sign-in on 2026-07-14, not attempted)",
+   "note": "OneDrive — cold archive, 1 TB. NOT measurable by disk_usage (the local path is a folder on D:, which is what the first version of bts_quota wrongly reported). Refresh from DOM: onedrive.live.com/?view=1&v=managestorage"
+  },
+  "ITC": {
+   "used": 4.51,
+   "free": 5.49,
+   "quota": 10.0,
+   "measured": false,
+   "source": "last publish (Publish-to-R2_KEYED.bat)",
+   "note": "Cloudflare R2 free tier. Usage from the last publish, NOT live. PUBLIC WEB — the PDF library should not be here."
+  }
+ },
+ "meters": {
+  "SGH_SPEND": {
+   "used": 3.3377,
+   "quota": 10.0,
+   "unit": "USD",
+   "measured": true,
+   "source": "sgh_spend.json (WORK 3.3196 + POLL 0.0181), month 2026-07",
+   "note": "Grok/SGH monthly spend against the $10 budget. HOST read of the durable ledger — PolleR makes NO inference call and spends nothing to read this.",
+   "ts": "2026-07-14T00:00:00"
+  },
+  "MS_CREDITS": {
+   "used": null,
+   "quota": null,
+   "unit": "credits",
+   "measured": false,
+   "source": "DOM account.microsoft.com/services/microsoft365/details required sign-in on 2026-07-14, not attempted",
+   "note": "MS 365 / Copilot AI credits. DOM ONLY. Last-known context (memory): consumer M365 Family INCLUDES 60 Copilot AI credits/mo in Word/Excel. Balance unread — renders 'no data' until a logged-in DOM read.",
+   "ts": "2026-07-14T00:00:00"
+  }
+ },
+ "measured_at": "2026-07-14T00:00:00"
+}

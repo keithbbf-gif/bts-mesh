@@ -1,0 +1,32 @@
+{
+ "_README": "KEITH'S POSTED FIGURES — the human half of the calibration loop.",
+ "_WHY_THIS_FILE_EXISTS": "MEASURED 2026-07-16: all four vendors are UI-ONLY for spend. Google has NO spend method in ANY Cloud Billing API version (checked the discovery doc — the authoritative contract: v1 = CRUD+IAM, v1beta/v2beta = SKU price catalog only, v1beta1/v2 = 404); BigQuery export is the only documented path. Anthropic's /v1/organizations/usage_report/messages is Console-org/API-key only, NOT Max/Cowork. xAI's /v1/api-key returns 200 but key metadata only (/v1/usage|billing|credits = 404). M365 Copilot is consumer-licence; Graph is enterprise-only. NOTHING CAN BE POLLED. So Keith reads the page and posts the number, and that number is the ONLY ground truth these pools have.",
+ "_HOW_TO_UPDATE": "Edit a block and re-run _run_meters.bat. Always set posted_at. If a figure is unknown, DELETE the block — do NOT guess. An absent pool renders grey 'no data', which is honest; a guessed pool is the $299-phantom failure again.",
+
+ "claude_quota": {
+  "used": 7,
+  "cap": 100,
+  "unit": "pct",
+  "reset_epoch": 1784219448,
+  "posted_at": "2026-07-16 10:58 CT",
+  "src": "Claude usage page, Max (20x). TWO WINDOWS, TWO CLOCKS — this pill shows the BINDING one: SESSION 7% used, resets in 32 min (11:30 CT). The other: WEEKLY all-models 3% used, resets Sun 6:59 AM. FABLE weekly 0% — never used, so a Fable CH4 review starts from a full tank. Opus draws THIS quota, not the dollar credits, which is why the credits number is static."
+ },
+
+ "claude_credits": {
+  "used": 242.64,
+  "cap": 250,
+  "unit": "usd",
+  "reset_epoch": 1785560400,
+  "posted_at": "2026-07-16 10:58 CT",
+  "src": "Claude usage page. $242.64 spent of the $250.00 MONTHLY SPEND LIMIT = 97% used -> $7.36 left until Aug 1. ⚠ DO NOT CONFUSE WITH 'Current balance $148.24 · Auto-reload On': the BALANCE is prepaid funds sitting there and auto-reload keeps topping it up, but the $250 MONTHLY SPEND LIMIT is what actually BINDS. That cap is why this wallet now fails SAFE — it was formerly 'Unlimited' + auto-reload, i.e. the only pool in the mesh that failed OPEN. Keith capped it. Static in practice: Opus consumes quota, not credits."
+ },
+
+ "sgh_quota": {
+  "used": 0,
+  "cap": 100,
+  "unit": "pct",
+  "reset_epoch": 1784241300,
+  "posted_at": "2026-07-16 11:02 CT",
+  "src": "grok.com Usage — 'Weekly SuperGrok Heavy Limit: 0% used, Resets July 16 2026 at 5:35 PM' (today, in ~6.5h). SUPERSEDES the 15% read on 07-12 (Voice 10 + Chat 5) — that window has since rolled. Extra Usage Credits: $0.00, Auto Top-Up available. TWO THINGS THIS CONFIRMS: (1) the extra-credit balance is $0.00, so the subscription funds NOTHING on the xAI API — separate billing systems per xAI's own docs; never let a dashboard imply the $100/mo offsets the API bill. (2) 0% used = the SuperGrok Heavy subscription is going UNUSED, exactly as BACKLOG_TOKEN_TRACKING_WIDGET predicted on 07-12: it buys grok.com CHAT, and the mesh retired the browser bridge for the API. Recorded as a fact, not a recommendation — Keith signed the 3-month promo ($100/mo x3) and it is a done deal."
+ }
+}

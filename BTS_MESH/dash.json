@@ -1,0 +1,398 @@
+{
+ "ts": 1786903704,
+ "when": "2026-08-16 13:08:24",
+ "burn": {
+  "gem": {
+   "kind": "free",
+   "date": "2026-08-16",
+   "via": "aistudio",
+   "via_note": null,
+   "used": 8,
+   "cap": 1500,
+   "cap_measured": false,
+   "pct": 0.5,
+   "work": 2,
+   "poll": 6,
+   "poll_cap": 300,
+   "tok": 5945
+  },
+  "sgh": {
+   "kind": "paid",
+   "month": "2026-08",
+   "spent": 7.14641,
+   "cap": 10.0,
+   "pct": 71.46,
+   "left": 2.8536,
+   "calls": 43,
+   "tool_calls": 0,
+   "tok_in": 2375308,
+   "tok_out": 83712,
+   "tok": 2459020,
+   "tok_cached": 391104,
+   "cache_hit_pct": 16.5,
+   "usd_saved": 0.586656,
+   "usd_per_ktok": 0.0029,
+   "autoreload": true
+  }
+ },
+ "surfaces": [
+  {
+   "id": "itc",
+   "name": "ITC",
+   "what": "Cloudflare R2",
+   "used_gb": 5.1,
+   "total_gb": 10.0,
+   "free_gb": 4.9,
+   "pct": 51.0,
+   "ok": true,
+   "trusted": true,
+   "method": "walk of the published subtree (7604 files)",
+   "note": "R2 free tier is 10 GB. This is the SOURCE we publish, so it is an upper bound on what is stored at the edge."
+  },
+  {
+   "id": "gdx",
+   "name": "GDX",
+   "what": "Google Drive",
+   "account": "keith.bbf@gmail.com",
+   "used_gb": 9.42,
+   "total_gb": 400.0,
+   "free_gb": 390.58,
+   "pct": 2.4,
+   "ok": true,
+   "trusted": true,
+   "used_in_drive_gb": 0.55,
+   "used_in_trash_gb": 0.0,
+   "method": "drive/v3/about?fields=storageQuota (AUTHORITATIVE, account-labelled)",
+   "note": "keith.bbf@gmail.com \u2014 real account quota. Of 9.42 GB used, only 0.55 GB is in Drive; 0.0 GB is in TRASH (reclaimable) and the rest is Gmail/Photos. Supersedes the old disk_usage(G:\\) reading, which was measuring the LOCAL TERA MIRROR."
+  },
+  {
+   "id": "odx",
+   "name": "ODX",
+   "what": "OneDrive",
+   "path": "D:\\ODX\\OneDrive",
+   "used_gb": 105.15,
+   "total_gb": 1024.0,
+   "free_gb": 918.85,
+   "pct": 10.3,
+   "ok": true,
+   "trusted": false,
+   "quota_declared": true,
+   "method": "USED: folder walk (25060 files) | QUOTA: declared 1024 GB",
+   "note": "QUOTA IS DECLARED, NOT PROBED \u2014 1 TB assumed (M365 Family/Personal). OneDrive's ClientPolicy.ini did not expose QuotaTotal on this machine. USED is genuinely measured by walking the folder. Verify the cap in OneDrive tray icon -> Settings -> Account."
+  },
+  {
+   "id": "tb1",
+   "name": "TB1",
+   "what": "TeraBox",
+   "ok": false,
+   "trusted": false,
+   "account": "keith.bbf@gmail.com",
+   "used_gb": null,
+   "total_gb": null,
+   "free_gb": null,
+   "pct": null,
+   "quota_declared": true,
+   "method": "NOT CONFIGURED",
+   "note": "USED not measurable from python \u2014 TB1's rail is the BROWSER, not the disk. \u26a0 ADVERTISED 1024 GB = 30 GB PERMANENT + 994 GB that EXPIRES in -1.9 days (2026-08-14). Durable capacity is 30 GB \u2014 the SMALLEST cloud surface we own (GDX=100, ODX=1024). NOT a vault. What happens to files above 30 GB at expiry is UNKNOWN \u2014 TeraBox publishes no ToS answer and SGH could not find one. Do not store anything here you cannot lose on 2026-08-14."
+  },
+  {
+   "id": "local",
+   "name": "LOCAL",
+   "what": "D: drive",
+   "used_gb": 1431.27,
+   "total_gb": 3725.99,
+   "free_gb": 2294.72,
+   "pct": 38.4,
+   "ok": true,
+   "trusted": true,
+   "method": "disk_usage(D:)",
+   "note": "The working drive."
+  }
+ ],
+ "cowork": null,
+ "cowork_error": "'spent'",
+ "credit": {
+  "total": 300.0,
+  "spent": 8.5064,
+  "left": 291.49,
+  "pct_used": 2.835,
+  "expires": "2026-10-13",
+  "days_left": 58,
+  "days_used": 32,
+  "total_days": 90,
+  "pct_time": 35.6,
+  "burn_per_day": 0.2658,
+  "need_per_day": 5.03,
+  "projected_waste": 276.08,
+  "renews": false,
+  "note": "ONE-TIME credit, expires 2026-10-13. It does NOT renew daily. Unspent credit is DESTROYED. To use it all you must burn $5.03/day; you are burning $0.2658/day, so you are on track to WASTE $276.08.",
+  "_trusted": false,
+  "_warning": "DO NOT SOUND AN ALARM WITH THESE NUMBERS. 'spent' is bts_vertex.py's own token arithmetic, NEVER reconciled against Google. 'projected_waste' is a projection of that estimate and was the source of the fabricated '$299 waste' on 2026-07-15. Worse: it is not established that the $300 pays for Agent Platform AT ALL \u2014 no Google page states it, so a 'waste' figure may be measuring a credit that was never spendable here. VERIFY IN Billing\u2192Reports (group by SKU): 'Other savings' NEGATIVE with Subtotal $0.00 = the credit paid. NOT the Cloud Hub Optimization page \u2014 that shows GROSS cost with credits invisible. Billing data lags up to 24h.",
+  "_expires_source": "COMPUTED (start+90d), NOT read from the console. Terms \u00a71.3 says the earlier of '$300 spent' or '3 MONTHS' \u2014 and Google uses '3 months'/'90 days' interchangeably though they differ. Read Billing\u2192Overview and fix CREDIT_EXPIRES in bts_vertex.py."
+ },
+ "policy": {
+  "bias": 53,
+  "name": "FAST",
+  "col": "#ffb020",
+  "rails": [
+   "sgh",
+   "vertex",
+   "gem",
+   "oa_api"
+  ],
+  "sgh": true,
+  "search": true,
+  "effort": "low",
+  "cache": true,
+  "parallel": true,
+  "max_tool_calls": 4,
+  "why": "Turns SEARCH on. This is the expensive step, not the model: a grounded call is $0.029 \u2014 67x a plain one \u2014 because search injects ~10k tokens AND bills $0.005 per search. Worth it only when the answer needs FRESH web/X knowledge.",
+  "proj_usd_per_call": 0.02943,
+  "proj_ms": 8000,
+  "proj_calls_per_10usd": 339,
+  "funded": "cash",
+  "free": false
+ },
+ "bench": {
+  "ts": 1786903709,
+  "when": "2026-08-16 13:08:29",
+  "nodes": [
+   {
+    "id": "crossref",
+    "name": "CROSSREF",
+    "what": "DOI truth",
+    "col": "#3ddc84",
+    "ms": 170.8,
+    "ok": true,
+    "note": "DOI truth. Free, unlimited, and it is REGISTRY truth \u2014 not a model's recollection.",
+    "cost_usd": 0.0
+   },
+   {
+    "id": "itc",
+    "name": "ITC",
+    "what": "R2 edge",
+    "col": "#FBAD41",
+    "ms": 136.9,
+    "ok": true,
+    "note": "Cloudflare R2 edge. Reached in 136.9 ms but returned HTTP 403 \u2014 from a sandboxed host this is the EGRESS ALLOWLIST, not an outage. Re-run on the Windows box.",
+    "cost_usd": 0.0
+   },
+   {
+    "id": "gem",
+    "name": "GEM",
+    "what": "flash\u00b7free",
+    "col": "#8b7cff",
+    "ms": 836.3,
+    "ok": true,
+    "note": "FAILED OVER TO VERTEX (?) on gemini-2.5-flash \u2014 NOT the free tier. The free rail is DEAD, not spent: 'prepayment credits depleted' is a BILLING STATE and does not reset. TOPPING UP DOES NOT FIX IT \u2014 any billing account linked to a project (even a free trial) makes it Tier 1 permanently. The ONLY fix is a project with billing NEVER linked. \u26a0 And it is UNVERIFIED that the $300 even pays for Agent Platform \u2014 check Billing\u2192Reports before calling this free.",
+    "cost_usd": 0.0
+   },
+   {
+    "id": "vertex",
+    "name": "VERTEX",
+    "what": "2.5-pro",
+    "col": "#8b7cff",
+    "ms": 2370.3,
+    "ok": true,
+    "note": "gemini-2.5-pro on the $300 credit. Use when it must be RIGHT.",
+    "cost_usd": 0.0
+   },
+   {
+    "id": "sgh",
+    "name": "SGH",
+    "what": "grok-4.5",
+    "col": "#e8734a",
+    "ms": 1712.5,
+    "ok": true,
+    "note": "grok-4.5 via /v1/responses. Real model time, not just TCP.",
+    "cost_usd": 0.000433
+   }
+  ],
+  "internodes": [
+   {
+    "a": "COWORK",
+    "b": "CROSSREF",
+    "ms": 309.5,
+    "col": "#3ddc84",
+    "note": "free, and the fastest rail we have. NEVER ask a model for a DOI."
+   },
+   {
+    "a": "COWORK",
+    "b": "GDX",
+    "ms": 15.2,
+    "col": "#3ddc84",
+    "note": "8 MB: write 18 ms (449 MB/s), read 12 ms (640 MB/s). LOCAL Drive cache \u2014 NOT the cloud round trip a remote node pays (that is bts_gdxbench.py)."
+   },
+   {
+    "a": "COWORK",
+    "b": "ITC",
+    "ms": 214.8,
+    "col": "#FBAD41",
+    "note": "READ ONLY for the nodes. 5 KB in 215 ms = 24 KB/s. Only COWORK can WRITE (R2 keys)."
+   },
+   {
+    "a": "COWORK",
+    "b": "GEM",
+    "ms": 1343.1,
+    "col": "#8b7cff",
+    "note": "Gemini API, free tier. Reply: OK"
+   },
+   {
+    "a": "COWORK",
+    "b": "SGH",
+    "ms": 1288.2,
+    "col": "#ffffff",
+    "note": "grok-4.5 API, UNGROUNDED. month $3.2964/$10.00"
+   },
+   {
+    "a": "COWORK",
+    "b": "SGH\u00b7DOM",
+    "ms": 2093.0,
+    "col": "#8fa0c8",
+    "note": "Chrome bridge. MEASURED 2026-07-13 via DOM observer + a HUMAN-pressed send. TTFT 254 ms, round trip 2093 ms. TRIVIAL PROMPT ONLY. The old '30-90 s' was COWORK's driving overhead, not the wire \u2014 the wire beats both APIs."
+   },
+   {
+    "a": "SGH",
+    "b": "GDX",
+    "ms": 0.0,
+    "col": "#3ddc84",
+    "note": "PROVEN 2026-07-14: SGH AUTHORS FILES TO GDX ON COMMAND (CH4-REVIEW-SGH.md, 5,383 B, correct folder). 'SGH cannot write to GDX' was FALSE and cost a week of routing design. RULES: the write must be its OWN turn (a bare 'write X to Y' \u2014 NOT 'write your previous message verbatim', which yields a 79-byte stub); give the folder by ID (1aiMjVZfFtiBGNAlkTwAYiq1Pvuz2F6hA), never by name; and VERIFY BY LISTING THE FOLDER, never by filename and never by its 'DONE'. See SOP_NODE_WRITES.md."
+   },
+   {
+    "a": "GEM",
+    "b": "GDX",
+    "ms": 0.0,
+    "col": "#8b7cff",
+    "note": "NEW RAIL 2026-07-14 (Keith found it): drive.google.com/drive/ai = GEMINI WITH NATIVE DRIVE READ, over the DOM, FREE (promotional; limits/expiry unstated). VERIFIED: read a GDX file back byte-for-byte. It CANNOT create files (says so plainly) \u2014 but its 'Export to Docs' button lands a real Google Doc in Drive that Cowork reads via the Drive API. \u21d2 THE LOOP CLOSES: SGH writes -> GEM reads/analyses -> Export to Docs -> Cowork reads. A verifiable artifact at every hop, $0, and COWORK'S CONTEXT IS NEVER THE TRANSPORT."
+   },
+   {
+    "a": "SGH",
+    "b": "GBW",
+    "ms": null,
+    "col": "#ff6b6b",
+    "note": "BOTH ARE GROK. Not a channel to optimise \u2014 a correlation to distrust. Never use one to check the other."
+   }
+  ],
+  "bus": {
+   "fanout": 4,
+   "serial_ms": 751.8,
+   "parallel_ms": 270.9,
+   "speedup": 2.78,
+   "efficiency_pct": 69.4,
+   "ok": true,
+   "note": "Theoretical max speedup = fanout (4x). Efficiency = what the bus actually delivered. Well under 100% means the bus \u2014 not the nodes \u2014 is the limit."
+  },
+  "cost_usd": 0.000866,
+  "free_only": false,
+  "elapsed_s": 8.4,
+  "channels_measured_at": "2026-07-14T00:02:52"
+ },
+ "drives": {
+  "C: system": {
+   "write": 1368.1,
+   "read": 2057.9,
+   "mb": 8,
+   "ts": "2026-07-31T14:23:43"
+  },
+  "V: Ai (PRIMARY)": {
+   "write": 107.0,
+   "read": 2282.5,
+   "mb": 8,
+   "ts": "2026-07-31T14:23:43"
+  },
+  "V: Research4": {
+   "write": 105.8,
+   "read": 2455.3,
+   "mb": 8,
+   "ts": "2026-07-31T14:23:43"
+  },
+  "D: PhD library": {
+   "write": 19.6,
+   "read": 2396.5,
+   "mb": 8,
+   "ts": "2026-07-31T14:23:44"
+  },
+  "X: GDX (Drive)": {
+   "write": 435.7,
+   "read": 529.9,
+   "mb": 8,
+   "ts": "2026-07-31T14:23:44"
+  },
+  "X: GDX root": {
+   "write": 483.7,
+   "read": 617.9,
+   "mb": 8,
+   "ts": "2026-07-31T14:23:44"
+  },
+  "ODX (OneDrive)": {
+   "write": 63.3,
+   "read": 2436.9,
+   "mb": 8,
+   "ts": "2026-07-31T14:23:44"
+  },
+  "G: Tera mirror": {
+   "write": 0.6,
+   "read": 2389.1,
+   "mb": 8,
+   "ts": "2026-07-31T14:23:56"
+  }
+ },
+ "drives_measured_at": "2026-07-31T14:23:56",
+ "surfaces_measured": {
+  "GDX": {
+   "used": 11.71,
+   "free": 88.29,
+   "quota": 100.0,
+   "measured": true,
+   "source": "host disk_usage(X:) + DOM cross-check drive.google.com/drive/u/0/quota \u2014 AGREE (2026-07-14)",
+   "note": "Google Drive \u2014 the exchange rail. Fast (580 MB/s) and PRIVATE. disk_usage(X:) reports the ACCOUNT quota. DOM read 2026-07-14: '11.71 GB of 100 GB used' \u2014 matches host exactly.",
+   "ts": "2026-07-14T00:00:00"
+  },
+  "D:": {
+   "used": 1363.97,
+   "free": 2362.02,
+   "quota": 3725.99,
+   "measured": true,
+   "source": "disk_usage(D:)",
+   "note": "Research2 + PhD library live here. 84 MB/s write.",
+   "ts": "2026-07-13T09:53:36"
+  },
+  "C:": {
+   "used": 748.2,
+   "free": 182.66,
+   "quota": 930.86,
+   "measured": true,
+   "source": "disk_usage(C:)",
+   "note": "System / NVMe. 1416 MB/s write.",
+   "ts": "2026-07-13T09:53:36"
+  },
+  "G:": {
+   "used": 4109.28,
+   "free": 3342.74,
+   "quota": 7452.02,
+   "measured": true,
+   "source": "disk_usage(G:)",
+   "note": "Tera mirror. 31 MB/s write \u2014 the slowest surface we own.",
+   "ts": "2026-07-13T09:53:36"
+  },
+  "ODX": {
+   "used": 105.5,
+   "free": 918.5,
+   "quota": 1024.0,
+   "measured": false,
+   "source": "Keith read it from the OneDrive client, 2026-07-13 (DOM refresh blocked: onedrive.live.com required sign-in on 2026-07-14, not attempted)",
+   "note": "OneDrive \u2014 cold archive, 1 TB. NOT measurable by disk_usage (the local path is a folder on D:, which is what the first version of bts_quota wrongly reported). Refresh from DOM: onedrive.live.com/?view=1&v=managestorage"
+  },
+  "ITC": {
+   "used": 4.51,
+   "free": 5.49,
+   "quota": 10.0,
+   "measured": false,
+   "source": "last publish (Publish-to-R2_KEYED.bat)",
+   "note": "Cloudflare R2 free tier. Usage from the last publish, NOT live. PUBLIC WEB \u2014 the PDF library should not be here."
+  }
+ },
+ "surfaces_measured_at": "2026-07-14T00:00:00",
+ "signal_ts": "2026-08-16T18:08:36Z",
+ "signal_count": 200
+}

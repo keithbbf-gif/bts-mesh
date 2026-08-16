@@ -128,11 +128,35 @@ def _month() -> str:
     return datetime.datetime.utcnow().strftime("%Y-%m")
 
 
+class LedgerUnreadable(OaError):
+    """The ledger exists and cannot be parsed. NOT the same as 'no ledger yet'."""
+
+
 def _load() -> dict:
+    """🔴 A FILE THAT CANNOT BE READ IS NOT A FILE THAT SAYS ZERO.
+
+    Found by the Grok Bot QA Engineer, 2026-08-16, first pass: this function used to swallow every
+    exception and return {}. budget() then computed spent=0.0, and ask() read that as permission —
+    on an account with auto-reload ON. So a corrupt, locked or half-written ledger did not stop
+    spending; it RESET it. The brake failed open, in the one module whose docstring says the brake
+    is the only thing there is.
+
+    Now: absent file -> a genuinely empty ledger, which is correct and is the first-run case.
+         present but unreadable -> RAISE. Refuse to price, refuse to spend, say why.
+    """
+    if not os.path.exists(LEDGER_FILE):
+        return {"calls": [], "reloads": []}
     try:
-        d = json.load(open(LEDGER_FILE, encoding="utf-8"))
-    except Exception:
-        d = {}
+        with open(LEDGER_FILE, encoding="utf-8") as fh:
+            d = json.load(fh)
+    except Exception as e:                                            # noqa: BLE001
+        raise LedgerUnreadable(
+            "%s exists and cannot be read (%s). REFUSING to treat that as $0 spent. "
+            "This account auto-reloads, so an unreadable ledger would let a loop run against a "
+            "$500 tier cap with the budget control switched off. Fix or move the file, then retry."
+            % (LEDGER_FILE, e))
+    if not isinstance(d, dict):
+        raise LedgerUnreadable("%s did not contain an object" % LEDGER_FILE)
     d.setdefault("calls", [])
     d.setdefault("reloads", [])     # <- the SGH scar: a prepaid top-up is a MOVING ceiling
     return d
@@ -165,7 +189,18 @@ def record_reload(usd: float, note: str = "auto-reload") -> dict:
 def budget() -> dict:
     d = _load()
     m = _month()
-    spent = sum(c.get("usd", 0.0) for c in d["calls"] if c.get("ts", "").startswith(m))
+    month_calls = [c for c in d["calls"] if c.get("ts", "").startswith(m)]
+    spent = sum(c.get("usd", 0.0) for c in month_calls)
+    # 🔴 A CALL WHOSE COST WAS NEVER MEASURED IS NOT A FREE CALL.
+    # Found by the Grok Bot QA Engineer 2026-08-16: an answer that came back without a `usage`
+    # block is written usd=0.0 and summed here, so it never consumes MONTHLY_BUDGET_USD. Its
+    # words: "the meter can look healthy while money is moving."
+    # The ledger must keep only BILLED TRUTH, so nothing is invented there. The BRAKE, however, is
+    # allowed to be pessimistic — so unpriced calls are counted and charged at the dearest tier as
+    # an explicitly labelled worst case, used ONLY to decide whether to refuse.
+    unpriced = [c for c in month_calls if not c.get("cost_measured")]
+    worst_each = MODELS["sol"]["in"] * 0.4 + MODELS["sol"]["out"] * 0.02
+    unpriced_worst = round(len(unpriced) * worst_each, 4)
     reloaded = sum(r.get("usd", 0.0) for r in d["reloads"] if r.get("ts", "").startswith(m))
     return {
         "month": m,
@@ -174,8 +209,11 @@ def budget() -> dict:
         "left": round(max(0.0, MONTHLY_BUDGET_USD - spent), 4),
         "pct": round(100.0 * spent / MONTHLY_BUDGET_USD, 1) if MONTHLY_BUDGET_USD else 0.0,
         "reloaded_this_month": round(reloaded, 4),
-        "warn": spent >= MONTHLY_BUDGET_USD * WARN_AT,
-        "exhausted": spent >= MONTHLY_BUDGET_USD,
+        "unpriced_calls": len(unpriced),
+        "unpriced_worst_case": unpriced_worst,
+        "warn": (spent + unpriced_worst) >= MONTHLY_BUDGET_USD * WARN_AT,
+        # the brake uses the pessimistic figure; the ledger above keeps only measured money
+        "exhausted": (spent + unpriced_worst) >= MONTHLY_BUDGET_USD,
     }
 
 

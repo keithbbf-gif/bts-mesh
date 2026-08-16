@@ -1,0 +1,24 @@
+# archive.toml — READ-ONLY. NEVER CONSULTED FOR STATE. MACHINE-READ.
+# Dated handoffs, .bak chains, superseded files. Evidence of what was believed ON A DATE — never a
+# description of the system now. A file in ARCHIVE must never answer "what is true?"
+#   state -> V:\Ai\BU.MD   constants -> rails.toml   rulings -> RULES
+#
+# Why it exists: the dated-handoff scheme rotted FOUR times (12c -> 12d -> 07-15 -> 07-17), and by
+# 07-20 six duplicates also sat in 00_WORKING, so a glob returned 15 files across two directories.
+schema = 1
+updated = 2026-07-31
+rule = "Nothing is ever moved OUT of the archive."
+
+[[owed]]
+what = "28 .bak_* files"
+detail = "13x 00_AUTONOMOUS_QUEUE.md.bak_* · 15x Dsrt_Citations_running.md.bak_*"
+blocked_by = "the bash mount CREATES but refuses to DELETE or OVERWRITE — needs a native .bat"
+
+[[owed]]
+what = "9x 00_NEXT_SESSION_HANDOFF_* dated handoffs"
+blocked_by = "same"
+
+[[owed]]
+what = "the monolith's two dated 'New path permissions / grants' sections (07-05, 07-10)"
+detail = "ARCHIVE-class; their only unique content was rescued to rails.toml [[channel]] bts-notify"
+blocked_by = "the monolith is not deleted until the ARCHIVE sweep and the remaining migration land"

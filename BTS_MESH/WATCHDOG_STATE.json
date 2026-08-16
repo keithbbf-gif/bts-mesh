@@ -1,0 +1,49 @@
+{
+ "cycles": 17,
+ "task_status": {
+  "T010": {
+   "status": "returned",
+   "file": "V:\\Research4\\Ai\\BTS_MESH\\returns_gem\\T010_GEM_2026-07-13_1512.md",
+   "at": "2026-07-13 15:12:16"
+  },
+  "T080": {
+   "status": "returned",
+   "file": "V:\\Research4\\Ai\\BTS_MESH\\returns_gem\\T080_GEM_2026-07-13_1522.md",
+   "at": "2026-07-13 15:22:40"
+  },
+  "T134": {
+   "status": "returned",
+   "file": "V:\\Research4\\Ai\\BTS_MESH\\returns_gem\\T134_GEM_2026-07-13_1533.md",
+   "at": "2026-07-13 15:33:15"
+  }
+ },
+ "seen_returns": {
+  "X:\\My Drive\\BTS_SGH_Handoff\\00_BTS_HANDOFF_README.md": 1783721565.783,
+  "X:\\My Drive\\BTS_SGH_Handoff\\SGH_skills-mining_2026-07-10.md": 1783735939.482,
+  "X:\\My Drive\\BTS_SGH_Handoff\\GBW_handshake_test_2026-07-10.md": 1783741060.746,
+  "X:\\My Drive\\BTS_SGH_Handoff\\GBW_BUILD1_SPEC_2026-07-10.md": 1783763075.284,
+  "X:\\My Drive\\BTS_SGH_Handoff\\bts_gdx (1).py": 1783780428.646,
+  "X:\\My Drive\\BTS_SGH_Handoff\\bts_gdx.py": 1783783542.394,
+  "X:\\My Drive\\BTS_SGH_Handoff\\SGH_RAIL_CHECK_2026-07-12.md": 1783841281.157,
+  "X:\\My Drive\\BTS_SGH_Handoff\\COWORK_OSSYNC_PROOF_2026-07-12.md": 1783844515.568,
+  "X:\\My Drive\\BTS_SGH_Handoff\\GBW_bts_bridge_2026-07-12.js": 1783874361.645,
+  "X:\\My Drive\\BTS_SGH_Handoff\\GBW_bts_office_2026-07-12.py": 1783892898.291,
+  "X:\\My Drive\\BTS_SGH_Handoff\\BTS-R10_LIT_PDF_2026-07-13.md": 1783955617.589,
+  "X:\\My Drive\\BTS_SGH_Handoff\\GDX_SYNC_PROBE.txt": 1783956603.239,
+  "X:\\My Drive\\BTS_SGH_Handoff\\GROK.TXT": 1783956893.184,
+  "X:\\My Drive\\BTS_SGH_Handoff\\4.txt": 1783957095.055,
+  "X:\\My Drive\\BTS_SGH_Handoff\\a.txt": 1783957202.331,
+  "X:\\My Drive\\BTS_SGH_Handoff\\b.txt": 1783957534.313,
+  "X:\\My Drive\\BTS_SGH_Handoff\\c.txt": 1783958159.099,
+  "X:\\My Drive\\BTS_SGH_Handoff\\desktop.ini": 1783944929.478492,
+  "V:\\Research4\\Ai\\SGH_returns\\BTS-B_toolkit_mining_2026-07-10.md": 1783695135.9313118,
+  "V:\\Research4\\Ai\\SGH_returns\\BTS-crosscom-upgrade_2026-07-10.md": 1783709146.12407,
+  "V:\\Research4\\Ai\\SGH_returns\\BTS-C_handoff-spec_2026-07-10.md": 1783695554.609375,
+  "V:\\Research4\\Ai\\SGH_returns\\BTS-dsrt-tools_2026-07-10.md": 1783724244.8696952,
+  "V:\\Research4\\Ai\\SGH_returns\\BTS-launch-proto_2026-07-10.md": 1783705179.9295273,
+  "V:\\Research4\\Ai\\SGH_returns\\BTS_SIGNAL.log": 1783768957.227112,
+  "V:\\Research4\\Ai\\SGH_returns\\GBW_bts_gdx_r1r2r3_fix_2026-07-11.md": 1783768957.215145,
+  "V:\\Research4\\Ai\\SGH_returns\\SGH_skills-mining_2026-07-10.md": 1783736027.7150214
+ },
+ "spend_usd": 0.0
+}

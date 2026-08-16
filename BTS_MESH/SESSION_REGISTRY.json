@@ -1,0 +1,84 @@
+{
+ "sessions": [
+  {
+   "sid": "sgh:tighten-loop",
+   "agent": "sgh",
+   "topic": "tighten-loop",
+   "url": "https://grok.com/project/6103cf2b-15c7-4588-a835-7339639b13f1",
+   "status": "idle",
+   "tasks": [
+    "MESH-TEST 2026-07-15: DOM write+reply PASS; GDX write PASS (server-verified); API PASS $0.000468; search governor PASS (refused)"
+   ],
+   "notes": "STATUS CORRECTED 2026-07-15. This said 'working' with ts 2026-07-10T14:55:28Z for FIVE DAYS — a dead browser session. bts_registry has NO heartbeat and NO TTL, so 'working' is just the last string anyone wrote and it says that forever. ⚠ THE REGISTRY IS NOT EVIDENCE OF LIVENESS. Any session whose ts is older than ~15 min must render STALE. Still unfixed — handoff 12d item #4.\nMESH-TEST 2026-07-15 (all server-verified): SGH is FULLY LIVE. Login is keith.bbf@gmail.com via GOOGLE (xAI had the email login AND the Google login on ONE account — switching cost nothing; PhD2, history, SuperGrok Heavy all intact). Grok's Google Drive CONNECTOR is OAuth'd to keith.bbf INDEPENDENTLY of the xAI login — connector identity != site-login identity. That is why GDX writes land correctly.\n🔬 NEGATIVE CONTROL, do not forget: with Drive toggled OFF in the PhD2 project, SGH thought 20s, replied DONE, and auto-titled the chat 'BTS Rail Check File Written'. NO FILE EXISTED. Verify server-side (Drive API + parentId) ALWAYS. NEW TELL: a real connector call renders a status line ('Writing file to Google D…'); a fabricated one shows only 'Thought for N s.'\nSEND: clicking the send BUTTON is autonomous (no human keypress — only synthetic RETURN navigates the tab). BUT it silently no-oped 1-in-3: verify composer emptied AND prompt is in the transcript before believing any send.",
+   "ts": "2026-07-15T17:30:00Z"
+  },
+  {
+   "sid": "cowork:main",
+   "agent": "cowork",
+   "topic": "main",
+   "url": null,
+   "status": "active",
+   "tasks": [],
+   "ts": "2026-07-10T14:55:28Z"
+  },
+  {
+   "sid": "copilot:odx",
+   "agent": "copilot",
+   "topic": "office-docs",
+   "url": "https://m365.cloud.microsoft/chat",
+   "status": "idle",
+   "tasks": [
+    "rail PROVEN 2026-07-12",
+    "MESH-TEST 2026-07-15: DOM write+reply PASS (replied OK; signed in as Keith Chambers). URL corrected to m365.cloud.microsoft/chat — copilot.microsoft.com is the consumer surface, NOT the Premium DOM reader. ODX read NOT re-tested: settled dead (metadata-only; chat-attach is the only read path) — see reference_copilot_word_portal."
+   ],
+   "notes": "COPILOT IS A REAL NODE AS OF 2026-07-12 (was a dead end). The rail is NOT what we assumed. TESTED: consumer Copilot's OneDrive connector is METADATA-ONLY - it can SEE files in BTS_ODX but CANNOT read the contents of ANY format (.md, .txt, AND .docx all failed; the Office-format theory was wrong). BUT it CAN read a file ATTACHED IN CHAT, and Cowork can drive that attachment itself via the Chrome extension file_upload - no human needed. PROVEN: attached COPILOT_FORMAT_TEST.docx, Copilot quoted the withheld passphrase ODX-DOCX-CONFIRMED-9021 exactly. So: ODX (D:\\ODX\\OneDrive\\BTS_ODX) = durable store + write-back surface; the READ path = upload-injection by Cowork. Copilot asks consent before touching storage and refuses to bluff - good node behaviour.",
+   "ts": "2026-07-12T08:45:00Z"
+  },
+  {
+   "sid": "gbw:build",
+   "agent": "gbw",
+   "topic": "build",
+   "url": "https://grok.com/c/1cef71ab-f5ed-4543-a2b8-5444b705fe61",
+   "status": "idle",
+   "tasks": [
+    "BUILD-1 bts_gdx.py DONE (v4, live-tested + Cowork-verified)"
+   ],
+   "notes": "Drive-write leg VERIFIED. BUILD-1 shipped: GBW authored bts_gdx.py; Cowork found D1-D3, then R4/R5; GBW fixed those but regressed R1/R2, so Cowork integrated the final v4. Backlog: BUILD-2 watchdog, BUILD-3 pydantic schemas, BUILD-4 MCP tool-defs, BUILD-5 LangGraph interrupt.",
+   "ts": "2026-07-11T15:10:00Z"
+  },
+  {
+   "sid": "gem:search",
+   "agent": "gem",
+   "topic": "search",
+   "url": "https://gemini.google.com/u/0/app",
+   "status": "degraded",
+   "tasks": [
+    "calibration PASSED",
+    "GDX read PROVEN 2026-07-12 — 🔴 STALE, RE-TESTED 2026-07-15 AND IT NOW HANGS"
+   ],
+   "notes": "🔴 MESH-TEST 2026-07-15 — GEM IS DEGRADED. The Workspace/Drive connector HANGS. Clean split, both measured: plain prompt -> replied 'OK' in ~25s (the DOM lane is HEALTHY); 'read BTS_RAIL_CHECK_C_2026-07-15.md from Drive' -> stuck on 'Connecting to Workspace' for >2.5 MINUTES, no reply, no error, spinner never resolved. ⇒ IT IS THE CONNECTOR, not the node and not the bridge. **SGH→GDX→GEM IS CUT AT THE GEM END**: SGH writes to GDX fine (verified), GEM cannot read it back. GEM's own Recents already contain 'Google Drive Access Required' and 'Connect Google Workspace to Gemini' — this has bitten before. LIKELY FIX: Keith re-approves the Workspace connection inside Gemini (Cowork must not click OAuth consents). Meanwhile GEM's API rail still works via the Vertex failover (verified via=vertex).\n⚠ COMPOSER: Gemini uses Quill (div.ql-editor contenteditable). SYNTHETIC TYPING SILENTLY NO-OPS — the text never lands. Use document.execCommand('insertText'), then click button[aria-label=\"Send message\"]. That scar is CURRENT.\nGEM = Gemini, LIVE with Google Drive access (2026-07-12). ** 2026-07-15: THE INDEX FLIPPED. /u/0/app IS NOW keith.bbf (was /u/1). ** MEASURED, not assumed: /u/0/app greets 'Your move, D!' with sidebar 'D Chambers' and Recents = 'Accessing Google Drive Files' / 'Connect Google Workspace to Gemini' / 'DOI Resolution Details Provided' / 'Citation Verification Task Error' -- our GEM chats. /u/1/app greets 'What can I help with, dchamberss?' = WRONG account, NO Drive grant. The old note said the exact opposite and would now send GEM to the wrong account SILENTLY.\n** DO NOT TRUST THE /u/N NUMBER. ** It is assigned by Chrome SIGN-IN ORDER, not identity, so it re-indexes whenever an account is added/removed/re-signed. It flipped when Keith reworked the profiles on 2026-07-15. HARDCODING IT IS THE BUG, not the value.\n** VERIFY BY CONTENT, NEVER BY LABEL OR URL: ** open the app and read the RECENTS. keith.bbf = the Drive/DOI/citation chats. Also note the greeting: keith.bbf -> 'D!'; dchamberss -> 'dchamberss'.\n** 'D Chambers' IDENTIFIES NOTHING. ** Both accounts display 'D Chambers' (proven on Grok, 2026-07-15, where dchamberss shows as 'D Chambers'). The old note's '/u/1/app = keith.bbf = D Chambers' baked in the assumption that the label discriminates. It never did. Only the EMAIL and the CHAT HISTORY do.\nACCOUNT MAP (2026-07-15): Chrome profile + Claude + Drive/GDX = keith.bbf | Grok/SGH (PhD2 project, BTS history, SuperGrok Heavy) = dchamberss | Cloud billing + Vertex + Gemini API keys = joanna.bbf. Three accounts, three jobs. A Chrome PROFILE identity is NOT the same as a SITE session identity -- the keith.bbf profile runs grok.com signed in as dchamberss, and that is CORRECT, not a bug. Drive access required connecting the Google Workspace app inside Gemini (Keith clicked Connect; it grants Gmail+Docs+Drive - Cowork must not click OAuth consents). PROVEN 2026-07-12: GEM listed the GDX folder and returned SGH_RAIL_CHECK_2026-07-12.md - the file SGH had just written - plus bts_gdx.py, 00_BTS_HANDOFF_README.md, GBW_handshake_test. All names cross-checked against the authoritative listing; none fabricated. SGH -> GDX -> GEM works with COWORK OUT OF THE LOOP. GOTCHA: Gemini errors on LONG prompts; keep messages short.",
+   "ts": "2026-07-12T08:05:00Z"
+  }
+ ],
+ "updated": "2026-07-11T15:10:00Z",
+ "gem": {
+  "task": "queued:1",
+  "status": "queued",
+  "ts": 1783974795.5047643
+ },
+ "sgh": {
+  "task": "queued:9",
+  "status": "queued",
+  "ts": 1783983200.3353398
+ },
+ "gbw": {
+  "task": "queued:6",
+  "status": "queued",
+  "ts": 1783983200.335342
+ },
+ "cowork": {
+  "task": "watchdog",
+  "status": "active",
+  "ts": 1783983200.3353424
+ }
+}

@@ -1,0 +1,25 @@
+{
+ "when": "2026-07-16T08:41:30",
+ "calls_attempted": 1,
+ "calls_ok": 1,
+ "errors": 0,
+ "tokens_in": 0,
+ "tokens_out": 0,
+ "spend_est_usd": 0.032446,
+ "elapsed_s": 61.0,
+ "billing_account": "010E47-824B53-7202F5",
+ "project": "project-5a33f910-1251-4d6a-bf9",
+ "_THIS_IS_AN_ESTIMATE": "spend_est_usd is OUR OWN token arithmetic (PRICES x usage), the same class of number that produced the $299 phantom. It is NOT a read of Google's billing. Its ONLY job is to be BIG ENOUGH TO SEE in the console. GROUND TRUTH = Billing -> Reports, ~24h lag: 'Other savings' NEGATIVE = the $300 paid for Agent Platform (question answered YES); 'Usage cost' > 0 with no savings = the credit does NOT cover Vertex (answered NO, and the dashboard's 'credit-funded' label is wrong and must come off).",
+ "results": [
+  {
+   "i": 0,
+   "ok": true,
+   "reason": "OK",
+   "ms": 61040,
+   "in": 0,
+   "out": 0,
+   "usd": 0.032446,
+   "model": "gemini-2.5-pro"
+  }
+ ]
+}

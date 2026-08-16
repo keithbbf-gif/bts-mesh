@@ -1,0 +1,50 @@
+{
+ "samples": [
+  {
+   "date": "2026-07-12",
+   "spent": 242.64,
+   "balance": 148.24,
+   "week_pct": 5.0,
+   "session_pct": 0.0
+  },
+  {
+   "date": "2026-08-11",
+   "week_pct": 3.0,
+   "source": "Windows system tray icon -> right-click -> usage",
+   "reported_by": "Keith",
+   "measured": true
+  },
+  {
+   "date": "2026-08-12",
+   "week_pct": 6.0,
+   "source": "Windows system tray icon -> right-click -> usage",
+   "reported_by": "Keith",
+   "measured": true
+  },
+  {
+   "date": "2026-08-13",
+   "week_pct": 9.0,
+   "source": "Windows system tray icon -> right-click -> usage",
+   "reported_by": "Keith",
+   "measured": true
+  }
+ ],
+ "predictions": [
+  {
+   "made_on": "2026-07-12",
+   "predicted_spent": 727.92,
+   "for_date": "2026-08-01",
+   "graded": false
+  },
+  {
+   "made_on": "2026-07-12",
+   "predicted_spent": 727.92,
+   "for_date": "2026-08-01",
+   "graded": false
+  }
+ ],
+ "_source": "\ud83d\udd34 THE SOURCE EXISTS AND COWORK DID NOT KNOW IT. Keith, 2026-08-12: 'there's an icon in the sys tray. Backclick gives usage.' This meter sat at ONE 2026-07-12 sample for 31 days, and the reason recorded for that was 'Cowork cannot read its own spend - no ledger, no API, the figure lives in Keith's account UI.' That was TRUE about the API and WRONG about the world: the number was two clicks away on his own desktop. \u21d2 'I cannot measure this' is a claim about the instruments SEARCHED, not about the ones that exist. Ask the human who owns the machine.",
+ "_reading": "2026-08-11: 3% of the week. 2026-08-12 (during this session): 6%. THE SESSION DOUBLED THE WEEK'S CONSUMPTION. Recorded because it is the evidence for C-13: the reasoning trail is not free.",
+ "_updated": "2026-08-13",
+ "_rate": "3 readings, 3 consecutive days: 08-11 3% \u00b7 08-12 6% \u00b7 08-13 9%. LINEAR AT +3 POINTS/DAY. Two intervals is a rate, not a trend - do not extrapolate a week from it, and note the whole span is ONE long plumbing session, which is not a typical workload."
+}
