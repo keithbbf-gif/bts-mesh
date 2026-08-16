@@ -63,6 +63,16 @@ KEYPATS = [
     ("anthropic",re.compile(r"sk-ant-[A-Za-z0-9_\-]{40,}")),
     ("aws",      re.compile(r"AKIA[0-9A-Z]{16}")),
     ("private",  re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----")),
+    # 🔴 GITHUB WAS MISSING UNTIL 2026-08-16, AND IT IS THE WORST ONE TO MISS.
+    # This scanner exists to stop a key entering a bundle that is PUSHED TO GITHUB. It covered five
+    # vendors and not the one it is publishing to. A GitHub token committed to a GitHub repo is the
+    # single most-scanned pattern on the platform: it is auto-revoked within minutes, which does not
+    # cause a scandal — it silently kills the push lane, the QA Engineer's connection, and CoPG's
+    # authentication at once. The gap was invisible because the scanner had only ever been tested
+    # against a planted OpenAI key. A control that passes is not evidence about the cases it never
+    # tried. (Same family as every false green tonight.)
+    ("github",   re.compile(r"gh[pousr]_[A-Za-z0-9]{30,}")),
+    ("github",   re.compile(r"github_pat_[A-Za-z0-9_]{50,}")),
 ]
 
 BRIEF = """# QA BRIEF — what to look for in this mesh
