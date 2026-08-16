@@ -1,0 +1,10 @@
+# nothing here should ever arrive, but a belt as well as braces
+.secrets/
+*secret*
+*token*
+*credential*
+*_spend.json
+*.bak
+Legal/
+**/OA_returns/
+**/_queue/

@@ -1,0 +1,878 @@
+#===============================================================================================
+# rails.toml — THE INFRASTRUCTURE CONSTANTS. MACHINE-CONSUMED. READ THIS DIRECTLY.
+#
+# Keith, 2026-07-31: "We are building an OS, not writing a story. AI can translate the latter into
+# the former, but that's not an efficient system to do every time."
+#
+# 🔴 THERE IS NO GENERATED MARKDOWN TWIN OF THIS FILE, AND THERE MUST NEVER BE ONE.
+# The first design generated RAILS.md from this file. GEM tore it down and this repo's own record
+# convicted it: `00_TOOLS_INDEX.md` carried the line "Generated from the JSON. Edit the JSON, not
+# this page" — AND NO GENERATOR EVER EXISTED. People edited the page, the JSON drifted, and
+# bts_identity.py shipped invisible for weeks (SCARS: TOOLS_INDEX drift, 2026-07-16 + 2026-07-28).
+# A second representation of the truth is the failure, not the fix.
+#
+# THE SPLIT IS BY CONSUMER, not by topic and not by mutability (GEM's correction, 2026-07-31):
+#   machine-consumed -> structured, read directly : rails.toml · index · routines · registries
+#   human-consumed   -> Markdown, untouched       : RULES.md · SCARS.md
+# Prior art for exactly this line: IaC vs runbooks · OpenAPI spec vs developer docs · .conf vs man.
+#
+# CONFIDENCE TAGS ARE PART OF THE SCHEMA, NOT A COMMENT:
+#   conf = "V"  measured, with the date it was measured
+#   conf = "U"  unverified / inferred / vendor-stated — MUST carry `owed` saying how to settle it
+# A value with no date is not a measurement. Anything unreachable is NOT MEASURED, never inferred.
+#===============================================================================================
+
+schema = 1
+updated = 2026-08-11
+owner = "KMesh"
+
+#--- BFast: the shared filesystem the nodes address ------------------------------------------
+# Roots are addressed with a COLON prefix: "ai:PLM_TODOS.md". A relative path whose first segment
+# is a root name is REFUSED (root-shadowing guard, 2026-07-31) — a node once wrote to
+# research4:handoff/ when it meant handoff:, and reported success after verifying the bytes.
+[bfast]
+home        = 'V:\Ai\BFast'                                  # 🔴 THE OS LIVES ON THE PRIMARY SURFACE
+entry       = 'V:\Ai\BFast\bfast.py'                        # what every client config must launch
+config      = 'V:\Ai\BFast\roots.json'                      # THE AUTHORITY as of 2026-07-31
+implementation = 'V:\Research4\Ai\BTS_MCP\bts_fs_mcp.py'   # NOT copied - one representation only
+semantics   = 'V:\Research4\Ai\BTS_MESH\bts_tools.py'      # bts_tools owns what a verb MEANS
+superseded  = 'V:\Research4\Ai\BTS_MCP\roots.json'         # delete once all clients launch bfast.py
+tools       = 13
+name        = "BFast"        # renamed from bts-fs 2026-07-30; old key dropped from all clients 07-31
+conf        = "V"
+measured    = 2026-07-31
+owed = "Entry point PROVEN 2026-07-31 from the new home: serverInfo BFast, protocol 2025-06-18, 13 tools, config read from V:\\Ai\\BFast\\roots.json. STILL OWED: (1) relocate bts_fs_mcp.py + bts_tools.py under the home, gated by the 68-test suite; (2) repoint all five client configs at bfast.py and delete the superseded roots.json; (3) resources/list returns EMPTY - the MCP protocol's own answer for exposing a control layer is unused."
+
+[[bfast.root]]
+name = "ai"
+path = 'V:\Ai'
+write = true
+role = "PRIMARY SHARED SURFACE — all AI-to-AI interaction"
+
+[[bfast.root]]
+name = "research4"
+path = 'V:\Research4'
+write = true
+role = "the dissertation stream's tree"
+
+[[bfast.root]]
+name = "handoff"
+path = 'X:\My Drive\BTS_SGH_Handoff'
+write = true
+role = "GDX — provisional WAN surface / rendezvous"
+
+#--- SURFACES: each has ONE job. The axis is REACH WITHOUT A HUMAN, not disk speed. -----------
+[[surface]]
+name = "V: Ai"
+path = 'V:\Ai'
+job = "PRIMARY shared surface"
+node_reach = "all four nodes, instantly"
+free_gb = 322.0
+write_mbs = 107.0
+read_mbs = 2282.5
+conf = "V"
+measured = 2026-07-31
+owed = "🔴 BENCHMARKED 2026-07-31 AND THE PREMISE WAS WRONG. V: is NOT the fastest drive after C:. On WRITES it is THIRD: C: 1368 > GDX 436 > V: 107. Reads are fine (2282, NVMe-class). The read/write asymmetry (21x) is odd enough to re-measure at 64 MB before any policy rests on it. V: REMAINS the primary surface anyway - the axis is REACH WITHOUT A HUMAN, not throughput - but the 'fastest drive' justification does not hold."
+
+[[surface]]
+name = "GDX"
+path = 'X:\My Drive\BTS_SGH_Handoff'
+job = "provisional WAN surface / rendezvous — the only surface a non-local node can reach"
+node_reach = "host tools + nodes via BFast 'handoff:'; NOT the bash sandbox"
+account = "🔴 NOT RECORDED ANYWHERE. UNKNOWN AS AT 2026-08-11 — asked by Keith, searched for, not found. NO line in rails.toml or CLAUDE.md ties X: to an email address. INFERENCE ONLY (do not promote to fact): keith.bbf@gmail.com, because (a) the JDX block's own owed says 'confirm Drive for Desktop will mount a SECOND account without disturbing Keith's X:', so X: is not joanna's; (b) keith.bbf is recorded as gcloud's original account with Drive; (c) Keith bought Google AI Plus on keith.bbf on 2026-08-11 FOR the Drive storage, which only coheres if X: is that account's drive. ⚠ THREE INFERENCES ARE NOT A MEASUREMENT, AND IDENTITY IS THIS MESH'S DOMINANT FAILURE CLASS — three Google identities already (S-97/S-99), and `gcloud auth login joanna.bbf` once silently made JOANNA the active account with nothing reporting it. ⇒ CONFIRM FROM DRIVE FOR DESKTOP'S OWN SETTINGS PANEL and record it here once. ⇒ AND NOTE THE NAMING IS PART OF THE PROBLEM: 'GDX' and 'JDX' encode no account, so nothing about either name can be checked."
+write_mbs = 435.7
+read_mbs = 529.9
+used_gb = 187.6
+quota_gb = 400.0
+used_pct = 46.9
+conf = "V"
+measured = 2026-08-11
+method = "shutil.disk_usage('X:\\\\') run natively on Windows, 2026-08-11 23:07. total 400.0 GB, free 212.4 GB."
+superseded = "Was quota_gb = 100.0, used_gb = 11.7, measured 2026-07-13 — recorded BEFORE Keith bought Google AI Plus for the storage ('so the Drive space comes back online and stays'), so it described a tier that no longer applied. It sat in this file for 29 days and BU.MD carried it forward as live. STALE BY CONSTRUCTION: a quota recorded before a purchase that changes the quota."
+owed = "✅ SATISFIED 2026-08-11: the prior owed said 'RE-MEASURE quota_gb AND used_gb, then restore conf = V with the new date.' Done — 400.0 / 187.6 / 46.9%, measured natively. ⚠ STILL OWED, and both matter: (1) CROSS-CHECK the figure ONCE against the Drive UI — shutil.disk_usage on a Drive-for-Desktop mount reports what the DAEMON advertises, which is a different question from what Google says the account's quota is, and this project has been bitten twice by measuring one thing and concluding about another; the FIGURE is measured, the INTERPRETATION of it as the account quota is not. (2) PROPAGATION LATENCY IS STILL UNMEASURED — that is why the role says 'provisional'. ⚠ AND THE STANDING RULE THIS FEEDS: Keith upgrades at 80% capacity, so used_pct is a DECISION INPUT and a wrong denominator makes it a wrong decision. At 46.9% there is headroom; do not compute it from the superseded numbers. ⚠ THIS BLOCK CARRIED TWO `owed` KEYS FOR ~20 MINUTES ON 2026-08-11 and rails.toml DID NOT PARSE — the S-118 failure exactly, self-inflicted while fixing the very entry it broke. maint_sweep caught it in the next run. Duplicate-key is invisible to the eye and fatal to tomllib: EDIT A TOML BLOCK BY READING THE WHOLE BLOCK FIRST, never by appending near a key you did not see."
+
+[[surface]]
+name = "ITC"
+path = "https://ai.dchambers.com"
+job = "public mirror, ONE-WAY publish. Dissemination, not exchange."
+node_reach = "publish-only"
+used_gb = 5.09
+quota_gb = 10.0
+conf = "V"
+measured = 2026-07-29
+owed = "TIGHTEST CONSTRAINT WE HAVE at 50.9%. Contents are public — what goes here is a dissemination decision, never a storage decision."
+
+[[surface]]
+name = "ODX"
+path = 'D:\ODX\OneDrive\BTS_ODX'
+job = "archive / private backup. CoP365 is its DOM reader."
+node_reach = "Cowork sandbox + host tools"
+write_mbs = 17.5
+read_mbs = "CACHED — NOT A DISK MEASUREMENT"
+conf = "V"
+measured = 2026-08-12
+method = "16 MB probe written, read back and removed at D:\\ODX\\OneDrive\\BTS_ODX, natively, 2026-08-12 02:44."
+superseded = "Was write 63.3 / read 2436.9, measured 2026-07-13."
+owed = "🔴 WRITE FELL 63.3 -> 17.5 MB/s IN 30 DAYS, A 3.6x DROP, AND THAT NUMBER IS NOT YET TRUSTWORTHY ENOUGH TO ALARM ON. ODX is a OneDrive folder on the D: Passport: a probe written while the sync daemon is uploading measures the daemon as much as the disk, so a single 16 MB sample cannot separate 'the drive is degrading' from 'OneDrive was busy'. ⚠ BUT THE SHAPE IS THE G: SHAPE — G: slid 17.7 -> 0.6 MB/s over eighteen days in plain sight, crossed no threshold suddenly, and was lost. D: is a 5.6-year-old USB drive at 49,058 power-on hours. ⇒ RE-MEASURE THREE TIMES ON DIFFERENT DAYS WITH SYNC IDLE before concluding either way, and DO NOT average them into one figure — the spread IS the finding. ⚠ read_mbs is deliberately a STRING, not a number: 2,965 MB/s came off the OS cache and bench_drive's rule is that anything over 1,500 is labeled, never recorded as a disk figure. ⚠ AND THE OLD CAVEAT STILL HOLDS: this is a property of ODX-ON-D:, not of OneDrive. Moving the folder to NVMe voids the finding and would bring M365 Family's 6 TB into play, inverting this table."
+
+[[surface]]
+name = "JDX (candidate)"
+path = "joanna.bbf@gmail.com Google Drive — NOT MOUNTED, NOT IN USE"
+job = "CANDIDATE backup/archive surface. NOTHING depends on it. Do not point anything here yet."
+node_reach = "none today"
+used_gb = 0.00055
+quota_gb = 15.0
+conf = "V"
+measured = 2026-07-31
+provenance = "HUMAN — Keith read the storage page: 550.64 KB of 15 GB, Gmail only, 0% full."
+why = "🔴 IT COMFORTABLY FITS WHAT WE ACTUALLY HAVE. PhD2_DATA_ARCHIVE measures 4.6 GB (2026-07-31) — 15 GB is ~3x headroom. Compare ITC at 5.09/10 GB (50.9%), our TIGHTEST constraint. And the mechanism is the one already measured FAST: Drive-for-Desktop writes to a LOCAL cache and mirrors in the background, which is exactly why GDX benchmarks at 435.7 MB/s write — faster than V: itself (107)."
+owed = "UNTRIED, and deliberately so — Keith: 'worth noting and trying when we have some free time in the plumbing.' Before anything relies on it: (1) confirm Drive for Desktop will mount a SECOND account without disturbing Keith's X: — his own stated concern, and identity confusion is this session's dominant failure class (S-97/S-99, three Google identities already); (2) benchmark it rather than assuming GDX's number transfers; (3) decide whether coupling a BACKUP surface to the account that also holds the $300 CREDIT is wise — one account, two unrelated dependencies. 🔴 UPDATED 2026-08-11 AND IT IS NOW WORSE THAN 'two dependencies': joanna.bbf HOLDS THE ONLY GOOGLE API KEY THAT EXISTS. Every Gemini and Vertex call this mesh has ever made ran on it, and its credit dies 2026-10-13. So pointing a backup surface there would make ONE account carry the archive, the credit AND the sole key — and the header of this file says the axis is REACH WITHOUT A HUMAN, which is precisely what a single-account failure takes away. ⇒ DO NOT ADOPT JDX UNTIL THE keith.bbf KEY EXISTS AND HAS ANSWERED. Concentration is the risk here, not capacity."
+not_a_replacement_for = "⛔ NOT a G: replacement. G: was a 7.3 TB recovery mirror; this is 15 GB. It can hold the ARCHIVE, not the mirror. Do not let it close the drive-health gap (S-96)."
+
+#--- MONITORS: the registry PLM-13 asks for. A monitor whose last write is older ---------------
+#    than its cadence must render RED, never last-known-good.
+[[monitor]]
+name = "BTS Rail Check"
+scheduler = "windows"
+cadence_h = 24
+runs = "02:05"
+action = 'V:\Research4\Ai\BTS_MESH\RAIL_CHECK.bat'
+writes = 'V:\Research4\Ai\PhD2_DATA_ARCHIVE\00_WORKING\RAIL_HEALTH_<date>.md + BTS_ODX\reports\'
+state = "ALIVE"
+conf = "V"
+measured = 2026-08-12
+owed = "⚠ THIS `measured` DATE IS A HAND-MAINTAINED COPY OF A FACT THE FILESYSTEM ALREADY KNOWS, AND IT ROTTED. It said 2026-07-30 while the monitor was running nightly, so KDash — which correctly renders a reading older than its cadence as RED — showed this monitor RED for thirteen days because of the DATE, not because of the monitor. Third instance tonight of a stale status string driving a red light nobody could clear (see R2 Publish Nightly, BTS Publish Watch). ⇒ THE REAL FIX IS TO STOP COPYING: `writes` names the artifact, so the freshness of THAT FILE is the measurement. A monitor's liveness should be read from its output's mtime, not from a date someone remembered to update. Until bts_kdash_feed does that, this line needs touching by hand every time — which is exactly why it will rot again. ✅ Verified running 2026-08-12 02:57: exit 0, wrote RAIL_HEALTH_2026-08-12.md and the ODX copy, and its DRIVE HEALTH row correctly adopted the elevated reading (5.2 h old) instead of publishing its own blind UNKNOWN."
+
+[[monitor]]
+name = "BTS Queue Runner"
+scheduler = "windows"
+cadence_h = 0.017
+runs = "every minute"
+action = 'pyw -3.14 V:\Research4\Ai\BTS_MESH\bts_runner.py --once'
+writes = 'V:\Ai\_queue\logs\ + runner_ledger.jsonl (ONLY when a job exists)'
+state = "🔴 INTERMITTENT - cause UNKNOWN as at 2026-08-13"
+diagnosis = "✅ TASK HISTORY LOG ENABLED 2026-08-13 12:31 by Keith (verified: enabled:true). THREE HYPOTHESES ARE DEAD - stuck instance (Status read Ready throughout) · power condition (measured NoSystemBattery; this is a desktop on AC and the flag is inert) · \"a UPS on battery\" (THERE IS NO UPS; here UPS is ULTRAVIOLET PHOTOELECTRON SPECTROSCOPY, the dissertation - that chain came from misreading an acronym, S-146). ⇒ CAUSE UNKNOWN, AND THE NEXT STALL IS NOW DIAGNOSABLE: event 129 = launched. Launches during a silence mean the scheduler fired and bts_runner ate the ticks; none mean the scheduler stopped. NOTHING TO DO BUT WAIT - do not manufacture a fourth theory."
+conf = "V"
+measured = 2026-08-12
+owed = "🔴 PLM-37. THE MOST LOAD-BEARING MONITOR IN THE MESH AND IT WAS NOT IN THIS REGISTRY. It closed PLM-25 on 2026-08-11 and became load-bearing the same day: fourteen jobs in one session, and EVERY verification of that session's fixes ran through it. MEASURED 2026-08-12: ran to 23:32, then 43 minutes with two jobs sitting unclaimed; woke 00:15, cleared both, stalled again by 00:21; ran again 00:53. ⚠ INTERMITTENT, NOT DEAD — AND THAT IS THE WORSE FAILURE, because one missed tick is indistinguishable from a healthy idle runner and passes any check that asks 'did it run today.' 🔴 ITS LIVENESS CANNOT BE MEASURED FROM ITS LEDGER: the ledger is written ONLY when a job runs, so silence means 'idle' and 'dead' identically. THE SIGNAL IS QUEUED-AND-UNCLAIMED — work in the queue root with nothing in running\\ — and it costs one stat call, needs neither the scheduler nor the runner, and therefore still works when the runner is the thing that is broken. Implemented: bts_mesh\\runner_doctor.py --check (grace 180 s = three ticks). OWED: wire it into rail_check so the stall reports itself. ⚠ CAUSE NOT MEASURED — probably machine idle after midnight, possibly a task condition (battery / idle / run-only-when-logged-on). DO NOT RECORD A CAUSE until the task's own conditions have been read; guessing a systemic cause is the bts_drive_health 'this bridge does not pass SMART through' error that was wrong for 6 of 6 disks."
+
+[[monitor]]
+name = "Drive Health (SMART)"
+scheduler = "windows"
+cadence_h = 24
+runs = "02:05, inside BTS Rail Check"
+action = 'V:\Research4\Ai\BTS_MESH\bts_drive_health.py'
+writes = 'V:\Research4\Ai\BTS_MESH\drive_health.json + the RAIL_HEALTH row'
+state = "BUILT 2026-07-31 — judgement selftested 9/9; first native reading owed"
+conf = "U"
+owed = "🔴 S-96, and it was unanimous across four nodes as THE critical hole: rail_check probed four API rails nightly and ZERO DISKS. G: slid 17.7 -> 0.6 MB/s over eighteen days unobserved. Thresholds warn 45 C / crit 50 C, plus a TREND check (an 8 C rise, or ANY growth in uncorrected errors, goes AMBER/RED) — because G: never crossed a threshold suddenly, it degraded in plain sight. ⚠ A bridge that hides SMART reports UNKNOWN, never GREEN. OWED: the first reading from Windows; the selftest proves the JUDGEMENT, not the READING."
+
+[[monitor]]
+name = "R2 Publish Nightly"
+scheduler = "windows"
+cadence_h = 24
+runs = "22:00"
+action = 'V:\Research4\Ai\BTS_MESH\publish_nightly.bat -> D:\R2Cloner\Publish-to-R2_KEYED.bat'
+writes = 'PUBLISH.log (tally, append) + 00_WORKING\R2_PUBLISH_LAST.log (full, TRUNCATED each run)'
+state = "✅ ALIVE AND LEAVING EVIDENCE"
+conf = "V"
+measured = 2026-08-12
+owed = "✅ PLM-02/03 ARE CLOSED, AND HAVE BEEN SINCE 2026-07-30 — the backlog and this entry both said otherwise for THIRTEEN DAYS. MEASURED 2026-08-12 from PUBLISH.log: the task points at the WRAPPER, and the tally holds dated OK lines for 07-30, 07-31, 08-01, 08-02, 08-04, 08-05, 08-06, 08-08, 08-10, 08-11 — TEN OF THE LAST THIRTEEN NIGHTS, each at ~22:01-22:03. ⚠ THREE NIGHTS ARE GENUINELY ABSENT (08-03, 08-07, 08-09) and that gap is the only real open question here; it is the same intermittency shape as the queue runner and probably the same cause. ⚠ AND NOTE WHY THIS SAT WRONG SO LONG: this `state` string was true when written and became false the day the wrapper was installed. Nothing re-reads a state string. KDash renders it verbatim, so the dashboard has shown this monitor RED / 'MEASURES NOTHING' for thirteen days while it was working — a stale status is not a small error, it is a red light nobody can clear. ⚠ A manual run 2026-08-12 02:54 returned exit=0 in 57.3 s, Transferred 0 B, Checks 76/76, DELETED 6 (the frozen control-document copies staged out of the published subtree)."
+
+[[monitor]]
+name = "BTS Publish Watch"
+scheduler = "windows"
+cadence_h = 0.0167
+action = 'wscript.exe V:\Research4\Ai\BTS_MESH\bts_publish_watch.vbs'
+writes = 'V:\Research4\Ai\BTS_MESH\PUBLISH.log'
+state = "🔴 OBSOLETE — RETIRE IT. Runs every 60s, contributes nothing."
+conf = "V"
+measured = 2026-08-12
+owed = "🔴 ITS DISABLE CONDITION HAS BEEN MET SINCE 2026-07-30 AND NOBODY NOTICED. The owed note said, verbatim: 'Disable once the wrapper writes the tally directly.' The wrapper has been writing the tally directly since 07-30 — ten dated entries prove it. So this watcher has launched roughly 18,000 more times since then, for zero lines, watching for an event that now has a better source. ⚠ IT CONTRIBUTED EXACTLY ONE LINE IN ITS ENTIRE LIFE: the 2026-07-14 install-day sentinel. Every other line in PUBLISH.log came from the wrapper. ⇒ RETIRE IT: `schtasks /delete /tn \"BTS Publish Watch\"` (Keith's click if it needs elevation), then drop this entry. ⚠ AND THE LESSON IS THE MECHANISM, NOT THE WASTE: a disable CONDITION written into prose is a condition nobody evaluates. If a monitor should stop when something else starts, the thing that starts should retire it — or a check should test the condition. Otherwise it runs forever and its own owed note explains why it should not."
+
+[[monitor]]
+name = "gdx-token-watch"
+scheduler = "cowork"
+cadence_h = 168
+state = "RETIRED 2026-07-30"
+conf = "V"
+measured = 2026-07-30
+owed = "none — no fuse left to watch. bts_gdx.py's OAuth is obsolete: all nodes are local. REOPENS if a node stops being local."
+
+[[monitor]]
+name = "bts-r2-watchdog-10min"
+scheduler = "cowork"
+state = "ON DEMAND ONLY"
+conf = "V"
+measured = 2026-07-30
+owed = "NOT A DEFECT. Keith runs it when he says. Do not 'fix' it."
+
+#--- SCHEDULERS: two of them, and they are NOT interchangeable --------------------------------
+[scheduler_rule]
+rule = "Anything touching V:, D: or a rail credential is a NATIVE Windows task. Cowork tasks are for Cowork-only work."
+why  = "A Cowork task cannot see V: unless the folder is in its connected set, and that set is not a file anyone can edit. That blinded free-tier-allotment-check for seven days."
+conf = "V"
+measured = 2026-08-12
+reconfirmed = "2026-08-12, and not by re-reading the rule — by living inside it for a whole session. Every one of ~25 verification jobs ran through the NATIVE queue runner because the Cowork sandbox cannot run a .bat, cannot see V: as a drive letter, caps a call at 45 s, and cannot write a spend ledger across the FUSE mount. When the native runner stalled, ALL native work stopped and nothing in the sandbox could substitute for it — which is the rule stated as a consequence rather than as a policy."
+owed = "⚠ AND THE RULE NOW HAS A COROLLARY IT DID NOT HAVE: a native task is a SINGLE POINT OF FAILURE with no fallback, because the sandbox genuinely cannot stand in. `BTS Queue Runner` stalling for 43 minutes stopped every native job in the mesh. ⇒ Anything routed to a native task inherits that task's liveness, so the task itself must be monitored — see [[monitor]] 'BTS Queue Runner' and PLM-37."
+
+#--- SANDBOX LIMITS: measured, and they shape every design ------------------------------------
+[sandbox]
+background_jobs = false
+background_jobs_note = "🔴 MEASURED 2026-07-31: each bash invocation is its OWN container. A nohup/& process DIES with the call that launched it — two node calls sat at RUNNING with no result and no error. Long work must run INSIDE one <=45 s call, or on the desktop. This bounds Rule 2 (\"background, no intervention\") more tightly than the rule assumes."
+windows_path_literals = '🔴 A hardcoded Windows absolute path used from the sandbox DOES NOT FAIL — os.makedirs creates a directory whose NAME is the whole literal, drive letter and backslashes included. Two such directories sit inside BTS_MESH, one dated 07-26 (S-101). Route every absolute path through bts_paths. Tell: a directory name containing a colon or a backslash.'
+bash_timeout_ms = 45000
+background_survives_between_calls = false
+mount_corrupts_reads = true
+conf = "V"
+measured = 2026-07-30
+owed = "Guard: Ai\\BTS_MESH\\bts_deadline.py writes RED-TIMED OUT rather than leaving an empty file. Long work runs natively in CoW or as a scheduled task."
+
+#--- WHAT ONLY THE DESKTOP CAN DO -------------------------------------------------------------
+[desktop_only]
+items = ["rclone R2 publish", "Origin COM", "Pandoc-on-Windows"]
+note  = "X: reaches host file tools but NOT the bash sandbox. G: does mount in bash (contradicts the older ROLD claim)."
+rule  = "KEITH'S SCREEN IS OFF LIMITS (2026-07-29). Desktop work ships as a .bat he double-clicks WHEN HE CHOOSES. The Desktop is a DELIVERY surface, not a repository: every .bat is one-and-done, and only KDash.vbs and Judge-UPS.vbs persist."
+conf  = "V"
+measured = 2026-07-31
+
+#--- CHANNELS: how a human or a node actually gets words into the mesh -------------------------
+[[channel]]
+name = "voice"
+method = "Start in GrokDT (Grok Desktop) · preload context there (PDFs etc.) · switch to Google Voice mode and converse · switch back to GrokDT, where the exchange is visible over the BTS bridge."
+state = "WORKING — Keith's own route, 2026-07-31. Use this; do not rebuild it."
+conf = "V"
+measured = 2026-07-31
+owed = "none. A transcribe-to-file inbox (V:\\Ai\\Inbox\\) was designed and PARKED — Cowork cannot poll a file, so it would not be realtime anyway, and this route already works."
+
+[[channel]]
+name = "gdx-write"
+finding = "SGH's Drive connector CREATES FOLDERS BUT CANNOT WRITE FILES. Measured 2026-07-31: she made My Drive/AI/chat/Grok/2026-07-31/ (4 mkdirs, 06:16-06:35 UTC) and zero files. Cowork's Drive connector wrote a 228 B probe into that same folder at 07:04 first try."
+implication = "The gap is HER CONNECTOR, not GDX permissions or the path. SGH cannot be a transcriber or a file courier; she can only signal by folder. Any other tool that can write a file there works."
+conf = "V"
+measured = 2026-07-31
+owed = "⚠ TWO AI TREES NOW EXIST ON GDX: the long-standing BTS_SGH_Handoff, and a new My Drive/AI/ that SGH created. Two trees for one purpose is how BTS_SGH_Handoff accumulated 31 sentinel files. FOLD OR NAME IT — Keith's call; nothing on GDX moves without him. Litter to sweep: cowork-write-probe.txt."
+
+#--- CLOCKS: dated things that will happen whether or not anyone is watching -------------------
+# Migrated 2026-07-31 from the monolith's CLOCKS table. These two rows resolved NOWHERE in the new
+# tree and would have been lost on deletion. Both concern the now-dead GEM AI-Studio rail, so the
+# drop looked deliberate — it was not. The second one is FOURTEEN DAYS OUT.
+[[clock]]
+name = "Gemini RPD reset"
+when = "midnight PACIFIC, daily"
+note = "Doc-confirmed. The one row of the old allotment table that was correct — the rest of that table seeded a $299 phantom credit (SCARS S-17). Applies only once a no-billing project exists."
+conf = "V"
+measured = 2026-07-15
+
+[[clock]]
+name = "Old GCP project soft-delete"
+when = 2026-08-14
+settled = true
+state = "✅ SETTLED 2026-07-31 — MEASURED UNDER BOTH ACCOUNTS. Non-event."
+note = "MEASURED TWICE, once per identity, which is the only reason this is trustworthy. keith.bbf@gmail.com: DELETE_REQUESTED empty, 2 projects ACTIVE. joanna.bbf@gmail.com (17:58): DELETE_REQUESTED EMPTY, exactly ONE project — project-5a33f910-1251-4d6a-bf9 / 614387154970 — LIFECYCLE_STATE ACTIVE, billingEnabled true against billing 010E47-824B53-7202F5 (OPEN: true). NOTHING IS PENDING DELETION ANYWHERE. No live rail can die on 2026-08-14. The first ‘settled’ was withdrawn the same session because it covered only one of two estates; this one states its scope, and the scope IS the finding."
+conf = "V"
+measured = 2026-07-31
+owed = "none for the deletion question — settled by measurement under both accounts. ⚠ SUPERSEDED IN PART, 2026-08-11: this line used to end '2026-10-13 remains a bts_vertex.py COMPUTED GUESS' while the credit block 232 lines below already recorded the date as CONFIRMED from the console banner (74 days remaining on 2026-07-31, +74 = 2026-10-13 exactly) and the balance as $297.09. TWO ENTRIES IN ONE FILE DISAGREED ABOUT THE SAME CONSTANT. The confirmation is the later and more specific finding and it wins; the guess language is withdrawn. ⇒ THE STANDING POINT: no spend endpoint exists in ANY version of the Cloud Billing API (measured against the discovery doc 2026-07-16), so balance and expiry can only ever be read by a human off the console page — which is exactly why the one human reading gets recorded once and cited everywhere, instead of each entry re-deriving it."
+
+[[discrepancy]]
+name = "THE ESTATE IS THREE GOOGLE IDENTITIES AND gcloud ANSWERS FOR EXACTLY ONE"
+found = 2026-07-31
+detail = "keith.bbf@gmail.com — gcloud's original account, Drive, default project gen-lang-client-0129519884, plus project-af3277c0-5279-4670-86c. joanna.bbf@gmail.com — holds the $300 Vertex credit: project-5a33f910-1251-4d6a-bf9 / 614387154970, ACTIVE, billingEnabled against 010E47-824B53-7202F5 (OPEN). dchamberss@gmail.com — xAI billing. ALL MEASURED 2026-07-31 under the accounts themselves."
+trap = "🔴 BOTH Google accounts contain a project literally named 'My First Project'. Keith's is project-af3277c0-5279-4670-86c / 475026348209; Joanna's is project-5a33f910-1251-4d6a-bf9 / 614387154970. Matching on the DISPLAY NAME confirms the wrong project. This already caused S-97."
+live_hazard = "⚠ `gcloud auth login joanna.bbf@gmail.com` on 2026-07-31 made JOANNA the ACTIVE gcloud account. Every later gcloud command answers for HER estate until someone switches back — the exact mirror of the error that produced S-97, now armed in the opposite direction."
+rule = "🔴 STATE THE ACCOUNT INSIDE ANY gcloud FINDING. `gcloud config list account` costs nothing and the answer is meaningless without it. An absence inherits the scope of its query."
+update_2026_08_16 = "🔴 MAKE THAT FOUR IDENTITIES. Keith, 2026-08-16, on subscribing Jack: 'We might have to switch google account associations (his is Ranny.bbf@gmail.com)' · 'Or our Ranny.BBF@gmail.com account, if you will' — so it is a FAMILY account, not solely Jack's, which is worse for this discrepancy rather than better: a shared identity has no single owner to ask. The estate is now keith.bbf · joanna.bbf · dchamberss · Ranny.bbf. ⚠ The switch itself is routine — Keith says they have done it once already — and it is a SIGN-IN ASSOCIATION on grok.com, NOT a Google Cloud change, so it cannot move the $300 Vertex credit, which lives on joanna.bbf. THE HAZARD IS NAMING, NOT BILLING: this file already records that both Google accounts contain a project called 'My First Project' and that matching on display name confirms the wrong one (S-97). A fourth identity in the family, sharing a surname stem across all four, is more of exactly that. ⇒ LABEL EVERY KEY AND EVERY FINDING BY ACCOUNT, and never by person, product or 'ours'."
+but = "The Vertex rail works under either account and will never surface any of this: bts_vertex's endpoint is publishers/google/models/... and carries NO project ID, so the API key alone decides what is billed."
+conf = "V"
+measured = 2026-07-31
+provenance = "MEASURED — gcloud run under each account in turn; plus Keith's in-session confirmation of ownership (HUMAN)."
+owed = "Before the credit-expiry decision: read the BALANCE and the REAL EXPIRY on Joanna's console billing page. Neither is in any API. 2026-10-13 is still a bts_vertex.py computed guess."
+
+
+[[clock]]
+name = "Vertex $300 credit expiry"
+settled = false
+balance_usd = 297.09
+balance_measured = 2026-07-31
+expiry_confirmed = "✅ 2026-10-13 CONFIRMED 2026-07-31 — console banner said 74 days remaining, and today+74 = 2026-10-13 exactly. bts_vertex.py's COMPUTED guess was right. The [U] on the date is CLOSED."
+when = 2026-10-13
+note = "Does not renew. After this date GEM has no funded rail unless something replaces it. Price Google One 2 TB vs a Vertex top-up ~4 weeks ahead."
+conf = "V"
+measured = 2026-07-15
+
+[[clock]]
+name = "Jack's SuperGrok Heavy promo expiry (JMesh)"
+settled = false
+when = 2026-11-17
+note = "Keith, 2026-08-16: 'Jack can subscribe to the SGH for the next three months, the promo is still going. I will sub Jack up tomorrow night at midnight.' Signed ~2026-08-17 ⇒ 3 months ⇒ ~2026-11-17. ⚠ THE START DATE IS ±1 DAY: 'tomorrow night at midnight' was said at 00:50 on Sunday 2026-08-16 and reads either as Mon 08-17 00:00 or Tue 08-18 00:00. It does not change the month. Correct the day when the receipt exists. 🔴 THIS IS THE SUBSCRIPTION, NOT THE API — xAI's own docs say they are separate billing systems, and the subscription funds NOTHING on api.x.ai. So it buys Jack the grok.com/DOM lane for JMesh; it does not move our API bill by a cent, and no plan may assume it does. ✅ AND THAT IS ARCHITECTURALLY RIGHT: a peer mesh needs its OWN rails, not a shared credential. This is the first piece of JMesh that exists independently of Keith's box (R19 item 3)."
+conf = "U"
+measured = 2026-08-16
+owed = "Confirm the actual charge date from the receipt and correct `when`. Money is Keith's alone; Cowork records the date and never touches the instrument."
+
+[[discrepancy]]
+name = "🔴 KEITH'S OWN SGH PROMO END DATE HAS NEVER BEEN READ — AND IT MAY LAND ON THE VERTEX CLIFF"
+found = 2026-08-16
+detail = "meters.json records 'Keith signed the 3-month promo ($100/mo x3)' with posted_at 2026-07-16 — but that is the date the QUOTA WAS READ, not the date the promo was signed. If it was signed in mid-July, three months ends MID-OCTOBER. The Vertex $300 credit dies 2026-10-13 (confirmed). Those are potentially the same fortnight."
+but = "The mitigation for the Vertex cliff is already broken and has been for months: the keith.bbf AI-Studio free-tier path — built precisely so GEM would survive the credit expiring — stopped working 'a while back and was never fixed, because there was an excess of free credit at the time.' (S-144: a deferral justified by a surplus inherits that surplus's expiry date, and nobody writes the date next to the deferral.)"
+owed = "🔴 READ THE ACTUAL PROMO START DATE OFF THE GROK.COM BILLING PAGE. It is not in any API — xAI returns key metadata only; /v1/usage, /v1/billing and /v1/credits all 404. One human reading, recorded once, cited everywhere. THEN the October decision can be made against three real dates instead of two real ones and a guess. ⚠ Keith's stated fallback — 'keith.bbf can get downgraded to SuperGrok, possibly still sufficient, if the promo doesn't continue' — is HIS call and needs no advice. What Cowork owes it is a date and a utilization number, not an opinion."
+conf = "U"
+measured = 2026-08-16
+provenance = "Keith's statement of intent (HUMAN) plus meters.json posted_at. The promo start date itself is UNMEASURED."
+
+#--- CHANNEL CONTRACT: the SGH -> Cowork notification spec ------------------------------------
+[[channel]]
+name = "bts-notify"
+spec = 'V:\Research4\Ai\BTS_NOTIFY_CONTRACT_v1.md'
+note = "The canonical SGH->Claude signal contract. Rescued 2026-07-31 from an orphaned dated session-record section in the monolith; it was the only unique content in it."
+conf = "V"
+measured = 2026-07-31
+
+#--- G: — the recovery mirror. NOT a surface; it is the thing you reach for when a surface fails --
+[[surface]]
+name = "G: Tera 4 - back 24"
+path = 'G:\Tera 4 - back 24'
+job = "RECOVERY MIRROR — old-desktop tree, CAMD data, +Papers, +Reference End note, Desktop BACKUPS. Restored 606 corrupted PDFs on 2026-07-02."
+node_reach = "bash sandbox + host tools (when it is powered and enumerated)"
+size_tb = 7.3
+used_pct = 52
+write_mbs = 0.6
+read_mbs = 2389.1
+state = "🔴 FAULTED 2026-07-31 — powered off, cooling"
+conf = "V"
+measured = 2026-07-31
+owed = "See SCARS S-96. Do NOT return it to service as a live mirror until the bridge is replaced or cleared. Reads only; copy off anything unique first."
+
+# It is NOT labelled a NAS. It is a SABRENT USB enclosure on this box (Get-PhysicalDisk: BusType=USB),
+# despite the volume label "NAS1". Jack's machine cannot reach it. There is no LAN meeting point.
+
+#=== NODES — every mind on the mesh. KDash must render ALL of these. ===========================
+# 🔴 bench.json currently lists FIVE (crossref, itc, gem, vertex, sgh) and keeps its OWN hardcoded
+# node list. That is a SECOND COPY of a registry. KDash and bts_chanbench must read THIS table.
+[[node]]
+id = "CoW"
+name = "Claude Code / Cowork"
+kind = "cli+mcp"
+model = "Opus 5 (1M ctx), Claude Max"
+mcp = "BFast 13 tools + Cloudflare 23 + Drive 8 + chrome 22 = 66"
+state = "LIVE"
+conf = "V"
+measured = 2026-08-16
+owed = "NOT ON KDASH. Also: spend meter is a single 07-12 sample, 19 days stale (PLM-23)."
+
+[[node]]
+id = "GW"
+name = "Grok Build (grok-build-0.1)"
+kind = "cli+api"
+auth = "grok.com SuperGrok subscription — no marginal cost"
+state = "LIVE"
+conf = "V"
+measured = 2026-08-16
+owed = "NOT ON KDASH as a distinct node. 🔴 AND IT HAD NEVER WORKED: marked LIVE conf=V on 07-30, but every call through bts_sgh failed on an unsupported `reasoningEffort` parameter until fixed 2026-07-31 (S-100). First successful call: 2026-07-31, 1132-word return. A rail that answers is not a node that works."
+
+[[node]]
+id = "SGH"
+name = "Grok 4.5 (web/X research + adversarial review)"
+kind = "api"
+state = "LIVE"
+conf = "V"
+measured = 2026-07-31
+owed = "on KDash. ⚠ grounded search worst case is a FLAT $2.00 (bts_sgh.MAX_CALL_USD) regardless of max_tool_calls — PLM-27."
+
+[[node]]
+id = "GEM"
+name = "Gemini (Vertex)"
+kind = "cli+api"
+state = "LIVE on Vertex (joanna.bbf, funded); AI-Studio free-tier path BROKEN (keith.bbf)"
+conf = "V"
+measured = 2026-08-12
+accounts = "🔴 TWO ACCOUNTS, TWO PURPOSES, AND THE RECORD HAD THIS WRONG UNTIL 2026-08-12. Keith, stating the architecture he and Cowork built together: **joanna.bbf@gmail.com is the CREDIT key — Vertex, the $300, project-5a33f910-1251-4d6a-bf9, billing 010E47-824B53-7202F5. keith.bbf@gmail.com keys were made for the DAILY FREE CREDITS (AI Studio), project 475026348209 — and that path BROKE a while back and was never fixed, because we had an excess of free credit at the time.**"
+superseded = "🔴 rails.toml and BU.MD both asserted 'joanna.bbf HOLDS THE ONLY GOOGLE API KEY THAT EXISTS' and 'the key is joanna.bbf, the ONLY Google key that exists.' FALSE. `.secrets\\gemini_keys-all but.txt` records, verbatim, `Project name: projects/475026348209` — a KEITH.BBF project — and the console shows two Gemini keys there created 2026-07-12. The claim conflated THE KEY with THE CREDIT and then propagated for days into the October planning."
+owed = """🔴 THE OCTOBER CLIFF IS NOT WHAT THE RECORD SAID IT WAS, AND THE DIFFERENCE IS THE WHOLE PLAN.
+Not "GEM loses its API lane" — the KEY is keith.bbf's and does not expire. What dies 2026-10-13 is
+the FUNDING: joanna's $300 Vertex credit, $297.09 untouched.
+
+⇒ THE MITIGATION IS ALREADY BUILT AND ALREADY BROKEN: the keith.bbf AI-Studio free-tier path. It was
+deprioritised for a REASON THAT WAS CORRECT AT THE TIME — "we have an excess of the free credits" —
+and nobody noticed that the reason had an EXPIRY DATE. On 2026-10-14 the surplus that justified
+leaving it broken is gone, and the fallback is a lane nobody has fixed.
+
+⇒ FIX THE keith.bbf FREE-TIER PATH BEFORE 2026-10-13. Then the cliff is not a cliff: the paid lane
+degrades to a free lane instead of to nothing. Doing it after the credit dies means diagnosing a
+broken rail with no working rail to compare against.
+
+⚠ AND THE GENERAL LESSON, WHICH IS WORTH MORE THAN THIS INSTANCE: A DEFERRAL JUSTIFIED BY A SURPLUS
+INHERITS THAT SURPLUS'S EXPIRY DATE. "Not worth fixing, we have plenty" is a decision with a clock
+on it, and the clock is never written down next to the deferral. Any 'we can live without this'
+must record WHAT makes that true and WHEN that stops being true."""
+
+[[node]]
+id = "CoPG"
+name = "GitHub Copilot CLI"
+kind = "cli+mcp"
+version = "1.0.75"
+state = "LIVE 2026-07-31 — the fourth lane"
+unique_reach = "the only scriptable route to X: (GDX) besides host file tools"
+conf = "V"
+measured = 2026-08-16
+owed = "🔴 NOT ON KDASH. Metered in AI credits (1 credit = $0.01); allowance UNPUBLISHED. Ledger: BTS_MESH\\bts_cop.py — 6.2 credits / 4 calls so far. Needs the CoP·¢ battery (PLM-28)."
+
+[[node]]
+id = "CoP365"
+name = "Microsoft 365 Copilot"
+kind = "observation-only"
+state = "OBSERVATION-ONLY as of 2026-07-31 — NOT A NODE. No MCP client, cannot see BFast under any prompt, and never once exercised from here."
+surface = "calendar free/busy · event creation · meeting-room finder · M365 search over mail/files/meetings/contacts · doc generation · python · image gen"
+conf = "V"
+measured = 2026-07-31
+owed = "DEMOTED 2026-07-31, unanimous across four nodes in KMESH_BLUEPRINT_2026-07-31.md: CoP365 does not earn node status. Counting it inflated the node count by 20% — six 'nodes' where five can be addressed. A capability we cannot invoke is a capability someone else has, not one we hold. It stays REGISTERED because the surface is real and may become reachable; it is no longer COUNTED. Distinct from CoPG — see RULES R13."
+
+#=== RAILS — BY KIND. The latency panel needs BOTH axes: time over the rail, AND the write ======
+#    speed of the surface the payload lands on. "Fetch and save" is the real operation, and its
+#    cost is latency + write. Neither number alone answers "how long will this take?"
+[[rail]]
+name = "crossref"
+kind = "api"
+what = "DOI truth"
+latency_ms = 219.1
+lands_on = "V: Ai"
+write_mbs = 107.0
+cost = "free"
+conf = "V"
+measured = 2026-07-29
+
+[[rail]]
+name = "itc"
+kind = "api"
+what = "R2 edge (public mirror)"
+latency_ms = 156.3
+lands_on = "ITC"
+write_mbs = 0.0
+conf = "V"
+measured = 2026-07-29
+owed = "write_mbs unmeasured — rclone publish is the write path, not a filesystem copy."
+
+[[rail]]
+name = "xai"
+kind = "api"
+what = "SGH grok-4.5 + GW grok-build-0.1"
+latency_ms = 1530.0
+lands_on = "V: Ai"
+write_mbs = 107.0
+cost = "$3.66 / $10.00 month-to-date"
+conf = "V"
+measured = 2026-07-30
+
+[[rail]]
+name = "vertex"
+kind = "api"
+what = "GEM 2.5 pro/flash"
+latency_ms = 2019.2
+lands_on = "V: Ai"
+write_mbs = 107.0
+cost = "$13.93 of the $300 credit spent; $286.07 remaining"
+conf = "V"
+measured = 2026-08-12
+balance = "🔴 MEASURED OFF THE BILLING CONSOLE 2026-08-12 (joanna.bbf > Billing > Reports). Banner: 'Free trial status: $286.07 credit and 62 days remaining.' Month to date $10.96, forecast $11.24, ONLY SERVICE = Vertex AI. ⚠ SUPERSEDES '$297.09, essentially untouched' — that figure was stale by $11 and the word 'untouched' was doing real damage to the planning."
+expiry_check = "✅ SECOND INDEPENDENT CONFIRMATION OF 2026-10-13. 2026-08-12 + 62 days = 2026-10-13 exactly, and the earlier derivation (74 days remaining on 2026-07-31) gives the same date. TWO READINGS, TWENTY-TWO DAYS APART, SAME ANSWER. The date is now measured twice and inferred zero times."
+owed = """💀 THE REAL NUMBER IS NOT THE BALANCE, IT IS THE WASTE.
+The cumulative chart RISES Aug 1-3 and is FLAT through Aug 12 — spend has effectively STOPPED, which
+matches the depleted AI-Studio key exactly. Google's own forecast concurs: $10.96 spent, $11.24
+forecast for the entire month.
+⇒ AT THIS BURN RATE ROUGHLY $286 OF $300 IS DESTROYED ON 2026-10-13.
+⇒ That is the largest idle prepaid balance in this mesh by two orders of magnitude, and the rule
+this file opens with says idle prepaid capacity is WASTED MONEY, not savings.
+
+🔴🔴 DO NOT ACTIVATE THE ACCOUNT. KEITH'S RULING, 2026-08-12: "Activating that account destroys the
+free credits, and we don't need to." THE BANNER IS A TRAP - it reads as "use any remaining credits,
+then pay only for what you use", which sounds like preservation and is not. ⇒ NOBODY CLICKS ACTIVATE
+ON joanna.bbf. Not to "unlock" anything, not to raise a quota, not to fix a 403. If a future session
+believes activation is the fix for something, THAT IS THE ERROR - find another way.
+
+🔴 THE ROUTING RULING, SAME DATE: "Use the Vertex credit." joanna.bbf EXISTS ONLY TO HOLD THE
+CREDIT; keith.bbf is for everything else. There are NO purchased credits anywhere yet, so until
+2026-10-13 GEM RUNS ON JOANNA'S VERTEX BY DEFAULT.
+⇒ BURN THE EXPIRING RESOURCE FIRST. $286.07 dies on a date certain; the AI-Studio free tier does
+not. Preferring the free lane while a dated credit evaporates is exactly backwards, and it is the
+same defect as leaving a prepaid rail idle.
+⇒ AFTER 2026-10-13 the order inverts: AI-Studio free tier becomes the default and Vertex needs
+purchased credit. THAT INVERSION IS A DATED CHANGE - put it in the clock, not in someone's memory."""
+
+[[rail]]
+name = "bfast"
+kind = "mcp"
+what = "the shared filesystem — 13 tools, all four nodes"
+latency_ms = 314.0
+lands_on = "V: Ai"
+write_mbs = 107.0
+conf = "V"
+measured = 2026-07-30
+owed = "🔴 THE MCP RAIL IS NOT ON KDASH AT ALL, and it is the one every node uses for every file operation. 314 ms is the handshake; per-verb latency is UNMEASURED."
+
+[[rail]]
+name = "bfast-handoff"
+kind = "mcp"
+what = "same server, GDX root"
+lands_on = "GDX"
+write_mbs = 435.7
+roundtrip_ms = 14.8
+# latency_ms MIRRORS roundtrip_ms, deliberately, added 2026-08-16. The 14.8 ms was measured and
+# correct all along — but bts_kdash_feed reads `latency_ms` and nothing else, so this rail rendered
+# UNMEASURED for weeks while carrying a real number under a different key. A measurement filed
+# under a name the renderer does not read is invisible, which is indistinguishable from absent.
+# ⚠ It is an MCP round trip, NOT a model round trip. Do not compare it to cli-grok's 4,705 ms.
+latency_ms = 14.8
+conf = "V"
+measured = 2026-08-12
+method = "write + read-back + unlink of a probe file at X:\\My Drive\\BTS_SGH_Handoff, timed natively 2026-08-12 02:39. 14.8 ms for the local operation; 110.3 ms including interpreter start."
+owed = "🔴 THIS MEASURES THE LOCAL CACHE, NOT THE RENDEZVOUS. 14.8 ms is Drive-for-Desktop's on-disk cache answering — the file is written locally and mirrored to Google in the background. THE THING THIS RAIL EXISTS FOR is a non-local node seeing that byte, and the slowest link is the SYNC DAEMON, which this probe never waits for. ⇒ 14.8 ms is TRUE and IRRELEVANT to the question the rail is for; it is measured-one-thing-concluded-about-another in miniature, recorded here so nobody quotes it as WAN latency. STILL OWED: write here, then observe arrival from the OTHER side."
+
+[[rail]]
+name = "cli-copilot"
+kind = "cli"
+what = "CoPG one-shot -p invocation"
+latency_ms = 8000.0
+lands_on = "V: Ai"
+write_mbs = 107.0
+cost = "0.37-4.40 AI credits per call — cache WRITES dominate, not token count"
+conf = "V"
+measured = 2026-07-31
+owed = "n=4. The 12x spread (0.37 vs 4.40) is cache continuity, not prompt size."
+
+[[rail]]
+name = "cli-grok"
+kind = "cli"
+what = "GW via grok CLI on the subscription"
+lands_on = "V: Ai"
+write_mbs = 107.0
+cost = "no marginal cost — SuperGrok subscription"
+startup_ms = 272.4
+# 🔴 MEASURED 2026-08-16 02:28 — ONE REAL PROMPT, END TO END, rc=0, CORRECT ANSWER.
+# This block's own `owed` has said since 2026-08-12: "STILL OWED: one real prompt through this lane,
+# timed end to end. It is the CHEAPEST lane we have and every routing decision that preferred another
+# lane was made without knowing what this one costs in seconds." That is now paid: 4,705 ms.
+# ⇒ 272.4 ms startup vs 4,705 ms end-to-end — a 17x gap. Anyone who had read startup_ms as the
+#   lane's latency would have thought this the fastest rail in the mesh. It is not; it is the
+#   CHEAPEST (no marginal cost on the subscription) and it is mid-pack on speed. Cheap and fast are
+#   different axes and this file kept only one of them.
+latency_ms = 4705.0
+conf = "V"
+measured = 2026-08-12
+method = "`grok --version` timed natively, 2026-08-12 02:39. Returned `grok 0.2.112 (9bbd559437) [stable]`."
+owed = "🔴 startup_ms IS NOT latency_ms AND MUST NOT BE RENDERED AS ONE. 272.4 ms is PROCESS START — shim, interpreter, PATH resolution — and says nothing about a model round trip. Recorded under its own key precisely so no reader can mistake it: a number is a measurement only if the counter means what you think (PLM-08, where a cumulative counter summed to 970 s for a 42.5 s job). ⚠ STILL OWED: one real prompt through this lane, timed end to end. It is the CHEAPEST lane we have — no marginal cost on the subscription — and every routing decision that has preferred another lane was made without knowing what this one costs in seconds."
+
+[[rail]]
+name = "cli-gemini"
+
+# 🔴 REQUIRED ENVIRONMENT — MEASURED 2026-08-16 03:31. Without these the CLI exits
+# rc=41 saying "you must specify GOOGLE_CLOUD_PROJECT and GOOGLE_CLOUD_LOCATION".
+# ADC supplies the CREDENTIAL; these supply the PROJECT and REGION. Both are needed,
+# and a successful `gcloud auth application-default login` alone changes nothing.
+# ⚠ LOCATION MUST BE "global". us-central1 returned HTTP 404 on all three attempts,
+#   with the project id AND with the project number. A 404 here reads like a dead
+#   lane and is actually a wrong region.
+# ⚠ ACCOUNT: joanna.bbf@gmail.com. ADC was minted under it (gcloud auth list, 03:31)
+#   and it bills the $300 Vertex credit — the only Google money that exists, 58 days
+#   left. keith.bbf is also credentialed and is NOT the one to use.
+# ⚠ quota_project_id in the ADC file is None, so the env var is what routes billing.
+# ⚠ AND THE LINE BELOW WAS WRITTEN AS **JSON** ON FIRST ATTEMPT — `{"k": "v"}` — which is NOT a
+#   TOML inline table. It needs `{ k = "v" }`. rails.toml did not parse for ~15 minutes at 03:45;
+#   toml_guard REFUSED it, bts_kdash_feed crashed, and bts_health went RED with "conf schema" and
+#   "adversarial (mechanical)" findings that had nothing to do with either. S-118 and S-141, third
+#   occurrence, this time by a script that had a revert path and did not reach it: the restore only
+#   ran on a rail-COUNT mismatch, so a PARSE failure jumped to the outer handler and left the broken
+#   file on disk. ⇒ A ROLLBACK MUST COVER THE FAILURE YOU DID NOT PREDICT, or it is decoration.
+env_required = { GOOGLE_CLOUD_PROJECT = "project-5a33f910-1251-4d6a-bf9", GOOGLE_CLOUD_LOCATION = "global", GOOGLE_GENAI_USE_VERTEXAI = "true" }
+env_file = 'V:\Research4\Ai\BTS_MESH\gemini_cli_env.json'
+kind = "cli"
+what = "GEM via gemini CLI -> Vertex"
+lands_on = "V: Ai"
+write_mbs = 107.0
+state = "PRESENT ON PATH — C:\\Users\\Papa\\AppData\\Roaming\\npm\\gemini.CMD, measured 2026-08-16. NOT YET DRIVEN: no prompt has been sent through this lane, so it is REGISTERED, not LIVE."
+conf = "U"
+measured = 2026-08-16
+owed = """
+🔴 THE 'BINARY IS NOT ON PATH' FINDING WAS WRONG, AND THE CORRECTION IS THE USEFUL PART.
+This block said "🔴 THE BINARY IS NOT ON PATH" from 2026-08-12 to 2026-08-16, and the lane was
+written off on that basis — including in the handoff, which told the next session to "install the
+CLI or retire the lane."
+MEASURED 2026-08-16 02:08 with `shutil.which("gemini")`:
+    C:\\Users\\Papa\\AppData\\Roaming\\npm\\gemini.CMD   ← it was there
+⇒ IT IS AN npm SHIM: a .CMD wrapper with NO .exe. That is the SAME TRAP already documented at
+  length in mesh_fanout._copg_argv for the Copilot CLI: `where` finds it, and Python's subprocess
+  with shell=False calls CreateProcess, which appends only `.exe` and therefore cannot see it.
+  "The program is not installed" and "Python cannot launch the program that is installed" produce
+  the IDENTICAL error. The scar was written for copilot, on this exact platform quirk, and was not
+  generalised to the other npm-installed CLIs — so the next one to hit it was diagnosed from
+  scratch and diagnosed wrong.
+⇒ RESOLVE EVERY CLI WITH shutil.which(), WHICH HONOURS PATHEXT, AND LAUNCH .cmd/.bat VIA `cmd /c`.
+  Applies to gemini, codex, copilot — all three are npm shims. grok and claude are real .EXEs.
+⚠ STILL NOT LIVE, AND THAT DISTINCTION IS THE WHOLE POINT OF S-100: the binary exists, and no
+  prompt has yet been driven through it. Presence is not a return. Do not promote to conf=V until
+  an answer from this lane lands in a file.
+"""
+
+[[rail]]
+name = "cli-claude"
+kind = "cli"
+what = "CoW native, in-process"
+lands_on = "V: Ai"
+write_mbs = 107.0
+startup_ms = 3253.2
+# MEASURED 2026-08-16 02:28 — one real prompt, rc=0, correct answer: 15,647 ms.
+# THE SLOWEST LANE IN THE MESH by a factor of three, and the one that spends Keith's own allotment
+# — the scarcest budget here. Both facts point the same way and they are the arithmetic behind
+# C-01 (CLAUDE SOLO, count 5): reaching for this lane by default is the expensive choice twice over.
+latency_ms = 15647.0
+conf = "V"
+measured = 2026-08-12
+method = "`claude --version` timed natively, 2026-08-12 02:39. Returned `2.1.220 (Claude Code)`."
+owed = "🔴 startup_ms IS NOT latency_ms. 3,253 ms is PROCESS START ONLY. ⚠ NOTE THE RATIO AND DO NOT SPEND IT CARELESSLY: this lane costs ~3.3 s before it has done anything, TWELVE TIMES cli-grok's 272 ms. For one long job that is irrelevant; for a loop of short calls it dominates, and this is the lane with no 45 s cap so it is exactly where loops get written. STILL OWED: one real prompt timed end to end."
+
+#=== SUBSCRIPTIONS — PREPAID CAPACITY. Idle prepaid capacity is WASTED MONEY, not savings. ======
+#    Recorded here because the question is never "is this free?" but "whose already-paid capacity
+#    is sitting idle?" A plan that is paid for and unused is the same defect as Claude Solo.
+
+[[subscription]]
+name = "Google AI Plus"
+holder = "keith.bbf@gmail.com"
+bought = 2026-08-11
+purpose = "🔴 GOOGLE DRIVE STORAGE. Keith, 2026-08-11: bought so the Drive space comes back online AND STAYS. The Gemini uplift is a side benefit, not the reason."
+surface = "Google Drive (GDX) · gemini.google.com/app · Gemini in Gmail · NotebookLM · creative studio"
+grants = "expanded Google Drive storage · Gemini app at 2x the no-plan limits, plus Flash Thinking · Gemini in Gmail · NotebookLM Audio and Video Overviews and Quizzes"
+renewal = "Keith will upgrade again at 80% capacity, not before."
+conf = "V"
+measured = 2026-08-11
+owed = """
+⚠ THE GDX SURFACE BLOCK ABOVE IS NOW STALE: it records quota_gb = 100.0 / used_gb = 11.7, measured
+2026-07-13. This subscription changed the quota. RE-MEASURE and update that block; do not compute a
+headroom figure from the old number, and do not guess the new one.
+⚠ AND DO NOT READ THE SANDBOX MOUNT FAILURE AS A DEAD SURFACE. `X:\\My Drive\\BTS_SGH_Handoff`
+fails to mount into the bash sandbox on every single call and is HEALTHY — 33 files listed
+host-side via Glob on 2026-08-11. CLAUDE.md already says it: bash cannot mount G: or X: even when
+they are fine. The warning is about the SANDBOX, never about the DRIVE.
+
+🔴 IT DOES NOT GRANT API ACCESS, AND THAT IS THE WHOLE POINT OF RECORDING IT.
+Google's own developer page (ai.google.dev/gemini-api/docs/google-ai-plans, updated 2026-08-04)
+states the limit verbatim: "Google AI plan benefits for developer usage apply only within the
+Google AI Studio web interface. Direct use of the Gemini API (such as using API keys or external
+applications) is billed and managed separately."
+AND: the AI-Studio uplift table on that page names FREE, AI PRO and AI ULTRA only. PLUS is not in
+it. So Plus does not even lift the AI Studio quota, let alone the API.
+⇒ THE VERTEX $300 CREDIT STILL EXPIRES 2026-10-13 AND STILL DOES NOT RENEW. Nothing about this
+subscription changes that date. Do not let the word "Plus" read as "the GEM billing problem is
+solved."
+✅ THE LEAD IS CLOSED, 2026-08-12, and the answer is NO. Asked over the gemini-dom rail from inside
+the Plus account itself: "Subscribers to the Google AI PLUS plan do not receive monthly Google Cloud
+credits. The Google Developer Program grants monthly Google Cloud credits EXCLUSIVELY to users who
+link a Google AI PRO or Google AI ULTRA membership." (Citation: Google Developer Program Overview.)
+⇒ SO THE MONTHLY-CREDIT PATH EXISTS AND PLUS IS THE WRONG TIER. That converts an unknown into a
+PRICED DECISION, which is Keith's: upgrade to Pro/Ultra for the monthly Cloud credits, or leave it.
+⚠ AND IT EXPLAINS WHY NO CREDITS PAGE COULD BE FOUND IN THE CLOUD CONSOLE. The depleted balance is
+Google AI STUDIO's PREPAY system, not Cloud Billing — it lives at ai.studio/projects. Keith searched
+the right concept in the wrong console. Restore paths: buy prepay credits there, or link a Cloud
+Billing account and switch the project Prepay -> Postpay.
+"""
+
+#=== the rail that subscription actually buys ==================================================
+[[rail]]
+name = "gemini-dom"
+kind = "dom"
+what = "GEM over the Gemini web app in Keith's own logged-in Chrome session"
+url = "https://gemini.google.com/app"
+lands_on = "V: Ai"
+write_mbs = 107.0
+cost = "no marginal cost — Google AI Plus, already paid"
+conf = "V"
+measured = 2026-08-12
+latency_ms = 40000
+proven = "🟢 DRIVEN 2026-08-12 ~14:55, FIRST RETURN EVER. Keith's own logged-in Chrome (Keith BBF · Plus), model Flash, chat gemini.google.com/app/bcd54d5b0642aba3. Landed at BTS_MESH\\returns_gemdom\\2026-08-12_AI_PLUS_CREDITS.md. End-to-end ~35-45 s to a complete CITED answer, with inline source chips. It answered a question BOTH PAID RAILS returned UNKNOWN on — SGH and GEM each refused to certify the Developer Program credit rule; the DOM rail produced it with a citation, for $0."
+extraction = "🔴 ONE TRAP AND IT WILL BITE A SCRIPT: during generation `get_page_text` returns the page with `Gemini said` PRESENT and the answer body ABSENT. Three consecutive polls looked like a completed EMPTY reply. A naive driver records a blank return and calls it done. ⇒ Poll until the text STOPS GROWING, or watch the stop button revert. Cheap completion signal: the chat TITLE changes when generation finishes."
+owed = """
+✅ PROVEN — the "registered, not proven" warning below is DISCHARGED as of 2026-08-12. Kept for the
+reasoning. (S-100: a node was "LIVE, conf=V" for two days and had never once been called.)
+⚠ STILL UNMEASURED: the context ceiling of the web app · whether a large attachment is read into
+context or chunked and retrieved · behaviour under a long document. Latency above is ONE sample on
+Flash, not a distribution, and Pro will differ.
+UNMEASURED, all of it: latency · the context ceiling of the web app · whether a large attachment is
+read into context or chunked and retrieved · whether returns can be extracted without hand-copying.
+🔴 WHY IT MATTERS ANYWAY — THE THINKING ASYMMETRY, already measured on 2026-07-16:
+Vertex BILLS THINKING AT THE OUTPUT RATE. One three-sentence answer cost out=101 tokens but
+thoughtsTokenCount=2883 — 28.5x, $0.0299, about 97% of it reasoning nobody ever saw.
+OVER THE DOM THAT THINKING IS FREE. So reasoning-heavy and bulk work belongs here, and short
+structured scriptable work belongs on the API. The API is the fallback, not the default.
+⇒ This rail is the natural successor to the Vertex credit when it expires in October, for
+everything that does not need to be scripted.
+"""
+
+#=== THE SECOND VERTEX CREDIT — the October cliff is not what rails.toml said it was ============
+[[subscription]]
+name = "GCP free trial credit — joanna.bbf@gmail.com"
+holder = "joanna.bbf@gmail.com"
+surface = "Vertex AI / Gemini API on a SECOND Google account"
+grants = "$300 GCP credit, separate from the keith.bbf credit"
+conf = "U"
+measured = 2026-08-11
+owed = """
+KEITH STATES the credit is live and the credentials are already stored. NOT INDEPENDENTLY VERIFIED
+from here — no balance read, no expiry date read, no live call made on this account.
+🔴 THE OCTOBER DATE IS TERMINAL. KEITH, 2026-08-11, CORRECTING COWORK DIRECTLY.
+This second credit is EXTRA CAPACITY. It is NOT a reprieve, and it does not move the deadline.
+⚠ Cowork wrote, on being told this credit exists, that "the cliff may be a step" and that the
+October date should not be restated as terminal until the second balance was read. WRONG, and
+wrong in a specific way worth naming: a NEW UNVERIFIED FACT WAS USED TO DOWNGRADE AN ESTABLISHED
+ONE. The expiry was known and load-bearing; the second credit was hearsay-to-Cowork and unread.
+Evidence flows the other way — an unverified item does not get to weaken a measured one.
+⇒ PLAN AS IF EVERYTHING GEM DOES ON VERTEX STOPS IN OCTOBER. Treat this credit as headroom for
+work done BEFORE then, never as a reason to defer the migration off it. (C-27.)
+🔴 RESOLVED THE SAME DAY, BY KEITH, AND IT INVERTS WHAT COWORK ASSUMED:
+"The only key is the one for joanna.bbf right now. We'll set up the key for the new subscription
+under keith.bbf@gmail.com later."
+⇒ THERE IS NO AMBIGUITY ABOUT WHICH ACCOUNT THE KEYS BELONG TO. THERE IS ONLY ONE ACCOUNT.
+EVERY Gemini and Vertex call this mesh has ever made ran on **joanna.bbf@gmail.com**. Cowork had
+assumed the store was keith's and the joanna credit was a spare. It is the other way round.
+⇒ AND THE OCTOBER DATE THEREFORE BITES HARDER, NOT LESS. It is not a backup credit expiring while
+a primary keeps running. It is THE credit, on THE account, for THE only key that exists. When it
+goes, GEM has NO API lane at all until a keith.bbf key is created. (C-27 was already the right
+call for the wrong reason — the correction stands and is now stronger.)
+⇒ OWED, and it is the whole of GEM's continuity: create the keith.bbf@gmail.com API key, store it
+labeled BY ACCOUNT, and prove a live call on it BEFORE October. Until that exists there is one
+key, one account, and one date.
+⚠ STILL WORTH DOING ANYWAY: label the key files by account. Today there is one account so nothing
+is ambiguous; the moment the keith.bbf key lands there will be two, and an unlabeled store is how
+a failover picks the dead one.
+"""
+
+#=== THE OPENAI RAIL — stood up 2026-08-11 =====================================================
+[[node]]
+id = "OA"
+name = "OpenAI Codex (gpt-5.6) — the fourth family"
+kind = "cli+mcp"
+auth = "ChatGPT plan sign-in, NOT an API key (doctor: stored auth mode chatgpt, stored API key false)"
+state = "LIVE — 23 ledgered calls on the API lane, returns written to file, costs exact to the cent. Promoted from REGISTERED 2026-08-15 on the standard the node itself set."
+conf = "V"
+measured = 2026-08-15
+owed = """
+S-100 IS THE REASON THIS SAID REGISTERED AND NOT LIVE FOR FOUR DAYS: a node was once marked
+"LIVE, conf=V" for two days having never been called. A rail that handshakes is not a node that
+works. It becomes LIVE when a return lands in a FILE, and not before.
+✅ THAT BAR IS NOW MET, and by the harder of the two lanes. 2026-08-15: 23 calls through
+bts_oa_api, every one priced from the API's own usage block, returns spilled to
+00_WORKING\\OA_returns\\. The largest read 438,135 tokens IN ONE CALL for $1.0056 in 100 s.
+⇒ Promoted on evidence, not on elapsed time. The node is LIVE; the openai-codex RAIL is not —
+  see below, and do not let one lane's proof stand in for the other's (C-16).
+
+WHY IT WAS ADDED, and it is not "one more model": every bench opinion in the war game so far was
+written by a family that also argued one of the sides — SGH argued for the Plaintiff and then sat
+the bench. OA is the only family in reach that has advocated for NEITHER party.
+
+STILL UNMEASURED, ALL OF IT ON THE **CODEX** LANE, NOT THE API LANE:
+  latency · the real usage allowance (`codex` then `/status`, a TUI command with no known headless
+  form) · the context ceiling under ChatGPT auth. The API lane answered all three questions for
+  itself and none of them for this one.
+"""
+
+[[rail]]
+name = "openai-codex"
+kind = "cli+mcp"
+what = "OA via Codex CLI 0.147.0, Windows-native, on the ChatGPT plan"
+lands_on = "V: Ai"
+write_mbs = 107.0
+cost = "no marginal cost — included in the ChatGPT plan; NOT metered API spend"
+# 🔴 MEASURED 2026-08-16 02:28 — 7,152 ms, rc=0, correct answer. This block's `owed` has said
+# "STILL OWED: latency UNMEASURED" since 2026-08-11. Paid.
+# ⇒ AND IT REFRAMES THE LANE: 7.2 s on the PREPAID plan against openai-api's metered ~3 s. This is
+#   the cheap OA lane, not the fast one — reach for it when the job fits inside 272k tokens and the
+#   thinking is worth more than the seconds. Above that ceiling only openai-api can hold the record.
+latency_ms = 7152.0
+conf = "V"
+measured = 2026-08-11
+owed = """
+MEASURED 2026-08-11 on windows-x86_64, codex doctor: 17 ok · 1 idle · 0 warn · 0 FAIL.
+  auth        chatgpt (stored API key: false) — so it draws the plan, not a card
+  websocket   connected, HTTP 101 Switching Protocols, wire API "responses"
+  mcp         1 stdio server — BFast, via `codex mcp add bfast -- python V:\\Ai\\BFast\\bfast.py`
+  sandbox     workspace-write, approval never, writable_roots = the three BFast roots
+🔴 IT GOES BOTH WAYS, AND NO OTHER NON-CLAUDE NODE DOES:
+  `codex mcp add`    -> Codex is an MCP CLIENT: it can read ai: research4: handoff: as TOOLS,
+                        rather than being handed a paste. SGH and GEM cannot do this.
+  `codex mcp-server` -> Codex is an MCP SERVER over stdio: the mesh can mount CODEX as a tool.
+  `codex exec`       -> reads the prompt from STDIN, so it is pipeable and ledgerable like bts_cop.
+STILL OWED: latency UNMEASURED. No ledger yet — there is no bts_oa.py, so this rail can currently
+spend the plan's allowance with no record of it. That is the exact defect the 45 s cap and the
+spend ledger exist to prevent on the paid rails. Write the ledger before the first real run.
+"""
+
+#=== LIVE — the second OpenAI lane. Keith, 2026-08-11: "BOTH." Built and proven 2026-08-14/15 ====
+# 🔴 THE BLOCK BELOW READ "PLANNED. NOT STARTED. There is no key, no billing, and no bts_oa_api.py"
+#    until 2026-08-15. ALL THREE WERE FALSE BY THEN — the key, the billing and the module all landed
+#    on 08-14, and 23 ledgered calls had run. A `state`/`owed` string is a REPORT and it ages like an
+#    exit code (§A finding 3, S-138). Nothing re-reads it, so it lied on KDash for a day.
+[[rail]]
+name = "openai-api"
+kind = "api"
+what = "OA via a real OpenAI API key (bts_oa_api.py) — gpt-5.6 sol/terra/luna · 1.05M CONTEXT IN · 128K MAX OUT · /v1/responses with chat/completions fallback · response CHAINING via previous_response_id. THE ONLY LANE THAT CAN HOLD THE ~422k-TOKEN WAR-GAME RECORD WHOLE."
+lands_on = "V: Ai"
+write_mbs = 107.0
+# MEASURED 2026-08-15 22:50 by rail_check, natively: GET /v1/models, HTTP 200, 124 models visible.
+# ⚠ THIS IS AN ENDPOINT REACH TIME, NOT A MODEL ROUND TRIP — the same quantity every other rail on
+# this bar reports, which is the only reason it is comparable. A generation on this lane takes 4-100 s
+# depending on how much of the record it is reading; those numbers live in oa_api_spend.json under
+# `secs`. Putting one of those here would repeat the `107 MB/s` defect: right number, lying column.
+latency_ms = 700.0
+cost = "METERED, EXACT — every call carries tok_in/tok_out from the API's own usage block. sol $5/$30 · terra $2/$12 · luna $0.20/$1.20 per MTok. Ledger: BTS_MESH\\oa_api_spend.json. MONTH TO DATE 2026-08-15: $9.1237 of a $25.00 self-imposed cap (36.5%), across 23 calls, ALL cost_measured=true."
+conf = "V"
+measured = 2026-08-15
+owed = """
+STATE: LIVE. Key present, billing live, module registered, 23 calls ledgered, costs exact.
+  Proven end to end 2026-08-15: 438,135 tokens in on terra, $1.0056, 100 s, return written to file.
+  That is the whole reason this lane exists — no other rail can read the record in one pass.
+
+🔴 TOKEN LIMITS — MEASURED, and they are the point of the lane.
+  context in .... 1,050,000 tokens, all three tiers (openai-codex is 272,000 and CANNOT hold it)
+  max output .... 128,000 tokens (bts_oa_api defaults to 20,000 per call; raise per call, not here)
+  largest read proven .... 438,135 tokens in, in ONE call
+  ⚠ VERIFY THE REFERENT. On 2026-08-14 Cowork quoted the codex lane's 272,000 as if it were this
+    lane's and argued against building the very thing that solved the problem. TWO OA LANES, TWO
+    CEILINGS, TWO LEDGERS. (C-16.)
+
+🔴 COST — measured on the same bench job every other rail has run, so it is comparable:
+  422k in + ~20k out .... sol ~$2.71 · terra ~$1.08 · luna ~$0.11
+  SGH's own ledger for that job .... $1.47  ⇒ TERRA UNDERCUTS SGH AND READS TWICE AS MUCH.
+  Chaining a follow-up costs CENTS, not dollars: previous_response_id lets a second question
+  reference a 438k-token record without resending it. Measured: $0.1846 then $0.1560.
+  DEFAULT TIER = terra. Reach for luna for bulk/cheap, sol only when a verdict must be the best
+  available and the $2+ is deliberate.
+
+🔴 RESTRICTIONS — and the first one is the load-bearing one:
+  THE ACCOUNT DOES NOT SELF-LIMIT. Measured from the billing console 2026-08-14: balance $50.00
+  with AUTO-RELOAD ON — at $20 it tops back up to $50, against a tier cap of $500/month. Running
+  dry is NOT the brake. There is no brake except the ones below, all in bts_oa_api.py:
+    MONTHLY_BUDGET_USD = 25.00   refuses every call once the month's ledger passes it
+    MAX_CALL_USD       = 3.50    refuses on ESTIMATE, before spending, not after
+    WARN_AT            = 0.80    budget() flags at 80%
+    MAX_RPM            = 60
+  ⇒ A prepaid top-up that re-ups is a MOVING CEILING. bts_oa_api.record_reload() exists because
+    bts_sgh's ledger was wrong for exactly this reason — Keith, 2026-08-03: "it renews at $10 a
+    time, it already did once, you missed it." RECORD THE RELOAD.
+  ⇒ Model ids are resolved against GET /v1/models before any paid call. A price table keyed on a
+    guessed id prices nothing (S-135: a correctly placed key with an invalid value is still broken).
+  ⇒ Returns over 4,000 chars SPILL to 00_WORKING\\OA_returns\\ and only a 600-char head comes back.
+  ⚠ KEITH SETS UP THE BILLING. NOBODY ELSE. Payment instruments are off limits to every node,
+    always (THE THREE RULES, rule 3). Cowork stages to the payment and stops there.
+  ⚠ Key at V:\\Research4\\.secrets\\openai_api_key.txt — OUTSIDE the published Ai\\ tree by LOCATION,
+    so no R2 publish pass can reach it even if an exclude list misses the filename. Labeled by
+    vendor; label by ACCOUNT the moment a second OpenAI account exists.
+
+WHY IT IS NOT REDUNDANT WITH openai-codex — the two lanes do different jobs:
+  openai-codex  PREPAID on the ChatGPT plan, MCP in BOTH directions, thinking not separately billed,
+                272k ceiling. Interactive and reasoning-heavy work.
+  openai-api    METERED, scriptable, ledgered like bts_sgh/bts_gem/bts_cop, 1.05M ceiling. ONE job:
+                a large, bounded, scriptable read that must see the whole corpus, written to FILE.
+⚠ codex login --with-api-key reads the key from STDIN, so the SAME binary serves both lanes - but an
+API-key login LOSES the cloud features and gets delayed access to new models. Keep them separate.
+
+STILL OWED ON THIS RAIL:
+  The ledger's `spill` field on the 08-15 calls records SANDBOX paths (/sessions/.../mnt/Research4)
+  rather than host paths. The files are real and on V:; the recorded path is not resolvable on the
+  host. Harmless to spend, wrong for anyone following the pointer.
+"""

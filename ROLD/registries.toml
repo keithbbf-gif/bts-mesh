@@ -1,0 +1,55 @@
+# registries.toml — POINTERS ONLY. NEVER COPIES. MACHINE-READ.
+# Was REGISTRIES/00_REGISTRIES.md for about twenty minutes. It is a pointer list; it was never prose.
+# Edit trigger: a registry is added or removed. NOT when its contents change.
+#
+# Why this file holds no data: a registry copied into a second place is a copy, and copies rot.
+# 00_TOOLS_INDEX.md carried "Generated from the JSON. Edit the JSON, not this page" — and NO
+# GENERATOR EVER EXISTED. Page and JSON drifted BOTH ways; bts_identity.py shipped invisible.
+schema = 1
+updated = 2026-07-31
+
+[[registry]]
+name = "tools"
+path = 'V:\Research4\Ai\00_TOOLS_INDEX.md'
+mirror = 'V:\Research4\Ai\BTS_MESH\TOOLS_REGISTRY.json'
+rule = "READ BEFORE WRITING ANY SCRIPT"
+conf = "V"
+measured = 2026-07-31
+owed = "🔴 BOTH hand-maintained, NO generator exists, drifted both ways (07-15, 07-28). Drift re-checked 2026-07-31: 23 tools, every file named in the JSON also appears in the .md — CLEAN. The 07-30 UNREGISTERED list is CLOSED except: verify_quotes, verify_conf. PLM-15 (a real generator) still open."
+
+[[registry]]
+name = "doi"
+path = 'V:\Research4\Ai\00_DOI_INDEX.md'
+rule = "front door to every reference, DOI and PDF store"
+conf = "V"
+measured = 2026-07-31
+owed = "⚠ the bash mount reads this as 0 DOIs where the host reads 78. Run verify_citations.py NATIVELY."
+
+[[registry]]
+name = "people"
+path = 'V:\Research4\Ai\PhD2_DATA_ARCHIVE\00_WORKING\PEOPLE_INDEX.md'
+rule = "collaborators, and KMesh contributors tagged as such"
+conf = "V"
+measured = 2026-07-31
+
+[[registry]]
+name = "folder-access"
+path = 'V:\Research4\Ai\PhD2_DATA_ARCHIVE\00_WORKING\00_FOLDER_ACCESS_RECORD.md'
+rule = "mount history"
+conf = "U"
+owed = "STALE — its own table says 7 mounts; the real number is 13. RAILS is authoritative."
+
+[[registry]]
+name = "rails"
+path = 'V:\Research4\Ai\ROLD\rails.toml'
+rule = "roots · surfaces · monitors · clocks · channels · sandbox limits"
+conf = "V"
+measured = 2026-07-31
+
+[[registry]]
+name = "scars"
+path = 'V:\Research4\Ai\ROLD\scars.jsonl'
+tool = 'V:\Research4\Ai\ROLD\scars.py'
+rule = "98 measured failures AS A QUERY. --rebuild refuses to write on cited != listed, and EVERY call refuses to answer on md-vs-jsonl drift (S-98)."
+conf = "V"
+measured = 2026-07-31
