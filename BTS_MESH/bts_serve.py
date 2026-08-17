@@ -73,17 +73,22 @@ def _leaf(lid, path):
     return out
 
 
-def _item_status(item):
+def _item_state(item):
+    """Live rows use state. status is a fallback only — not the floor."""
     if not isinstance(item, dict):
         return ""
-    return str(item.get("status") or "").upper().replace("-", "_")
+    raw = item.get("state")
+    if raw is None or raw == "":
+        raw = item.get("status")
+    return str(raw or "").upper().replace("-", "_")
 
 
 def _board_meta(path):
     """seq + open counts from items[]. Torn/unreadable → null, null.
 
-    Live board.json is {seq, items}. There is no top-level "open" string.
-    open is derived: {open, needs_owner} = counts of item status OPEN / NEEDS_OWNER.
+    Live board.json is {seq, items}. Rows carry state (OPEN / NEEDS_OWNER / DONE).
+    There is no top-level "open" string and no status key on live rows.
+    open is derived: {open, needs_owner} = counts of item state OPEN / NEEDS_OWNER.
     """
     try:
         with open(path, encoding="utf-8") as f:
@@ -100,7 +105,7 @@ def _board_meta(path):
         return seq, None
     n_open = n_need = 0
     for it in items:
-        st = _item_status(it)
+        st = _item_state(it)
         if st == "OPEN":
             n_open += 1
         elif st == "NEEDS_OWNER":
@@ -347,8 +352,8 @@ def _selftest():
             f.write("# in\n")
         with open(empty["board"], "w", encoding="utf-8") as f:
             json.dump({"seq": 7, "items": [
-                {"status": "OPEN"}, {"status": "OPEN"},
-                {"status": "NEEDS_OWNER"}, {"status": "DONE"},
+                {"state": "OPEN"}, {"state": "OPEN"},
+                {"state": "NEEDS_OWNER"}, {"state": "DONE"},
             ]}, f)
         os.makedirs(os.path.dirname(empty["tmp"]), exist_ok=True)
         with open(empty["tmp"], "w", encoding="utf-8") as f:

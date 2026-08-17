@@ -32,8 +32,8 @@ try:
     open(paths["phone_out"], "w", encoding="utf-8").write("# out\n")
     open(paths["phone_in"], "w", encoding="utf-8").write("# in\n")
     json.dump({"seq": 7, "items": [
-        {"status": "OPEN"}, {"status": "OPEN"},
-        {"status": "NEEDS_OWNER"}, {"status": "DONE"},
+        {"state": "OPEN"}, {"state": "OPEN"},
+        {"state": "NEEDS_OWNER"}, {"state": "DONE"},
     ]}, open(paths["board"], "w", encoding="utf-8"))
     os.makedirs(os.path.dirname(paths["tmp"]), exist_ok=True)
     open(paths["tmp"], "w", encoding="utf-8").write("x=1\n")
@@ -48,11 +48,13 @@ try:
     check("tmp present", p1["tmp"]["present"])
 
     print("== tonight-shaped board (seq + items, no top-level open) ==")
-    items = ([{"status": "OPEN"}] * 18
-             + [{"status": "NEEDS_OWNER"}] * 2
-             + [{"status": "DONE"}] * 7)
+    items = ([{"state": "OPEN"}] * 18
+             + [{"state": "NEEDS_OWNER"}] * 2
+             + [{"state": "DONE"}] * 7)
     json.dump({"seq": 27, "items": items}, open(paths["board"], "w", encoding="utf-8"))
     p27 = S.packets(paths)
+    check("fixture plants state not status",
+          all("state" in it and "status" not in it for it in items))
     check("seq 27", p27["board"]["seq"] == 27)
     check("OPEN 18 + NEEDS_OWNER 2",
           p27["board"]["open"] == {"open": 18, "needs_owner": 2})
