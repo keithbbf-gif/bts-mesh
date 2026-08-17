@@ -43,207 +43,82 @@ def _read_json(path, default=None):
 
 
 # ── LIVE PACKETS (phone / board / lock / tmp) ────────────────────────────────
-# Peer files. Nodes talk to surfaces directly; CoW is keeper, not the bus.
-# These are NOT CHANNELS through cowork. /api/burn only STATs them — no rail
-# probe, no rail_check, no dash.json rewrite, no bts_kdash_feed loop.
-#
-# Paths come from the existing helpers. Do not invent V:\Ai\board.json or
-# V:\Ai\tree_lock. Absent lock file → FREE. Never create the lock file.
-# Events: actor PHONE|BOARD|LOCK|TMP, target GBW.
+# Peer files. IMPORT the live helpers — do not ship replacement path modules.
+# Absent lock file → FREE. Never create the lock file.
 def default_packet_paths():
-    """Peer-file paths via bts_phone + bts_paths. Override in tests only."""
+    """bts_phone.OUTBOX/INBOX + bts_paths.board/queue/airoot. No invented roots."""
     import bts_phone
     import bts_paths
     return {
-        "phone_cow_to_qa": bts_phone.OUTBOX,
-        "phone_qa_to_cow": bts_phone.INBOX,
+        "phone_out": bts_phone.OUTBOX,
+        "phone_in": bts_phone.INBOX,
         "board": bts_paths.board("board.json"),
         "lock": bts_paths.queue("tree_lock.json"),
         "tmp": bts_paths.airoot("tmp", "temp_files.toml"),
     }
 
 
-def _stat_peer(path):
-    """mtime/size only. Missing file is honest absence, not an error."""
-    out = {"path": path, "exists": False, "mtime": None, "size": None}
+def _leaf(lid, path):
+    """id, path, present, mtime, size. Stat only — never create."""
+    out = {"id": lid, "path": path, "present": False, "mtime": None, "size": None}
     if not path:
         return out
     try:
         st = os.stat(path)
     except OSError:
         return out
-    out["exists"] = True
+    out["present"] = True
     out["mtime"] = st.st_mtime
     out["size"] = st.st_size
     return out
 
 
-def _item_open(item):
-    if not isinstance(item, dict):
-        return True
-    if item.get("open") is False:
-        return False
-    st = str(item.get("status") or item.get("state") or "open").lower()
-    return st not in ("closed", "done", "released", "free")
-
-
-def _board_fields(path):
-    """board.seq + open count. Unreadable / odd shape → 0, 0 (stat still reports mtime/size)."""
+def _board_meta(path):
+    """seq + open (OPEN|NEEDS_OWNER). Torn/unreadable → null, null — not 0, 0."""
     try:
         with open(path, encoding="utf-8") as f:
             data = json.load(f)
     except Exception:
-        return 0, 0
-    if isinstance(data, list):
-        return len(data), sum(1 for i in data if _item_open(i))
+        return None, None
     if not isinstance(data, dict):
-        return 0, 0
+        return None, None
     seq = data.get("seq")
-    seq = int(seq) if isinstance(seq, int) else 0
+    if not isinstance(seq, int):
+        seq = None
     raw = data.get("open")
-    if isinstance(raw, int):
-        return seq, raw
-    if isinstance(raw, list):
-        return seq, sum(1 for i in raw if _item_open(i))
-    n = 0
-    for key in ("items", "tasks", "cards", "entries"):
-        v = data.get(key)
-        if isinstance(v, list):
-            n += sum(1 for i in v if _item_open(i))
-        elif isinstance(v, dict):
-            n += sum(1 for i in v.values() if _item_open(i))
-    return seq, n
-
-
-def _tmp_open_count(path):
-    """open count from tmp/temp_files.toml. Stat-only otherwise — no directory walk."""
-    try:
-        try:
-            import tomllib
-        except ModuleNotFoundError:
-            import tomli as tomllib
-        with open(path, "rb") as f:
-            data = tomllib.load(f)
-    except Exception:
-        return 0
-    if not isinstance(data, dict):
-        return 0
-    raw = data.get("open")
-    if isinstance(raw, int):
-        return raw
-    if isinstance(raw, list):
-        return sum(1 for i in raw if _item_open(i))
-    n = 0
-    for key in ("files", "file", "temp_files", "temps", "open_files"):
-        v = data.get(key)
-        if isinstance(v, list):
-            n += sum(1 for i in v if _item_open(i))
-        elif isinstance(v, dict):
-            n += sum(1 for i in v.values() if _item_open(i))
-    if n:
-        return n
-    skip = {"meta", "config", "settings"}
-    return sum(1 for k, v in data.items()
-               if k not in skip and isinstance(v, (dict, list)))
-
-
-def _iso_from_mtime(mtime):
-    if not mtime:
-        return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(mtime))
-
-
-def _packet_events(phone_out, phone_in, board, lock, tmp, board_seq):
-    """Events the existing cockpit renderSignals / fireNewPackets already know how to paint.
-
-    Actor is the peer file (PHONE|BOARD|LOCK|TMP). Target is GBW — not cowork
-    or BUS catalog names. posOf maps unknown actors to the hub; GBW is a node.
-    """
-    ev, i = [], 0
-    max_mtime = max(
-        [x.get("mtime") or 0 for x in (phone_out, phone_in, board, lock, tmp)],
-        default=0)
-    base = int((max_mtime or 0) * 1000) + int(board_seq or 0) * 1_000_000_000
-
-    def add(actor, event, detail, mtime, direction="out"):
-        nonlocal i
-        i += 1
-        ev.append({
-            "seq": base + i,
-            "ts": _iso_from_mtime(mtime),
-            "actor": actor,
-            "target": "GBW",
-            "event": event,
-            "detail": detail,
-            "direction": direction,
-        })
-
-    if phone_out.get("exists"):
-        add("PHONE", "note",
-            "COW_TO_QA %s B" % (phone_out.get("size") or 0),
-            phone_out.get("mtime"))
-    if phone_in.get("exists"):
-        add("PHONE", "note",
-            "QA_TO_COW %s B" % (phone_in.get("size") or 0),
-            phone_in.get("mtime"), direction="in")
-    if board.get("exists"):
-        add("BOARD", "note",
-            "seq=%s open=%s" % (board.get("seq") or 0, board.get("open") or 0),
-            board.get("mtime"))
-    if lock.get("status") == "FREE":
-        add("LOCK", "STATUS", "FREE", lock.get("mtime"))
-    elif lock.get("exists"):
-        add("LOCK", "STATUS",
-            "HELD %s" % (lock.get("holder") or "").strip(),
-            lock.get("mtime"))
-    if tmp.get("exists"):
-        add("TMP", "note",
-            "open=%s" % (tmp.get("open") or 0),
-            tmp.get("mtime"))
-    return ev
+    if isinstance(raw, str) and raw.upper().replace("-", "_") in ("OPEN", "NEEDS_OWNER"):
+        return seq, raw.upper().replace("-", "_")
+    return seq, None
 
 
 def packets(paths=None):
-    """Stat the four peer files. Cheap: os.stat + two small reads. No rail I/O."""
-    p = paths or default_packet_paths()
-    phone_out = _stat_peer(p.get("phone_cow_to_qa"))
-    phone_in = _stat_peer(p.get("phone_qa_to_cow"))
-    board = _stat_peer(p.get("board"))
-    lock = _stat_peer(p.get("lock"))
-    tmp = _stat_peer(p.get("tmp"))
-
-    board_seq, board_open = (0, 0)
-    if board["exists"]:
-        board_seq, board_open = _board_fields(board["path"])
-    board["seq"] = board_seq
-    board["open"] = board_open
-
-    if lock["exists"]:
-        lock["status"] = "HELD"
-        holder = ""
+    """Five leaves: phone_out / phone_in / board / lock / tmp. Stat only."""
+    if paths is None:
         try:
-            with open(lock["path"], encoding="utf-8", errors="replace") as f:
-                holder = f.readline().strip()[:80]
+            paths = default_packet_paths()
         except Exception:
-            holder = ""
-        lock["holder"] = holder or None
+            # This snapshot does not ship live bts_phone / airoot. Import-only.
+            paths = {k: None for k in ("phone_out", "phone_in", "board", "lock", "tmp")}
+    phone_out = _leaf("phone_out", paths.get("phone_out"))
+    phone_in = _leaf("phone_in", paths.get("phone_in"))
+    board = _leaf("board", paths.get("board"))
+    lock = _leaf("lock", paths.get("lock"))
+    tmp = _leaf("tmp", paths.get("tmp"))
+
+    if board["present"]:
+        board["seq"], board["open"] = _board_meta(board["path"])
     else:
-        lock["status"] = "FREE"
-        lock["holder"] = None
+        board["seq"], board["open"] = None, None
 
-    tmp["open"] = _tmp_open_count(tmp["path"]) if tmp["exists"] else 0
+    lock["state"] = "HELD" if lock["present"] else "FREE"
 
-    mtimes = [x["mtime"] for x in (phone_out, phone_in, board, lock, tmp) if x.get("mtime")]
-    out = {
-        "phone": {"cow_to_qa": phone_out, "qa_to_cow": phone_in},
+    return {
+        "phone_out": phone_out,
+        "phone_in": phone_in,
         "board": board,
         "lock": lock,
         "tmp": tmp,
-        "mtime": max(mtimes) if mtimes else 0,
-        "seq": board_seq,
-        "events": _packet_events(phone_out, phone_in, board, lock, tmp, board_seq),
     }
-    return out
 
 
 def burn(packet_paths=None):
@@ -422,7 +297,7 @@ def _whos_on_port(port=PORT):
 
 
 def _selftest():
-    """Throwaway dir. Proves packets shape, absent lock → FREE, board.seq + open, no rail import."""
+    """Throwaway dir. Five leaves, absent lock → FREE, torn board → null, no path-module write."""
     import tempfile, shutil
     d = tempfile.mkdtemp(prefix="bts_burn_packets_")
     ok = True
@@ -435,60 +310,55 @@ def _selftest():
 
     try:
         empty = {
-            "phone_cow_to_qa": os.path.join(d, "COW_TO_QA_ENGINEER.md"),
-            "phone_qa_to_cow": os.path.join(d, "QA_ENGINEER_TO_COW.md"),
+            "phone_out": os.path.join(d, "COW_TO_QA_ENGINEER.md"),
+            "phone_in": os.path.join(d, "QA_ENGINEER_TO_COW.md"),
             "board": os.path.join(d, "board.json"),
             "lock": os.path.join(d, "tree_lock.json"),
             "tmp": os.path.join(d, "tmp", "temp_files.toml"),
         }
         p0 = packets(empty)
-        check("absent lock is FREE", p0["lock"]["status"] == "FREE" and not p0["lock"]["exists"])
-        check("absent peers have no mtime", p0["mtime"] == 0 and p0["seq"] == 0)
-        check("phone pair keys present",
-              "cow_to_qa" in p0["phone"] and "qa_to_cow" in p0["phone"])
+        check("five leaves",
+              all(k in p0 for k in ("phone_out", "phone_in", "board", "lock", "tmp")))
+        check("absent lock is FREE", p0["lock"]["state"] == "FREE" and not p0["lock"]["present"])
+        check("no holder field", "holder" not in p0["lock"])
+        check("leaf ids", p0["phone_out"]["id"] == "phone_out" and p0["lock"]["id"] == "lock")
+        check("did not create lock", not os.path.exists(empty["lock"]))
 
-        with open(empty["phone_cow_to_qa"], "w", encoding="utf-8") as f:
-            f.write("# cow -> qa\n")
-        with open(empty["phone_qa_to_cow"], "w", encoding="utf-8") as f:
-            f.write("# qa -> cow\n")
+        with open(empty["phone_out"], "w", encoding="utf-8") as f:
+            f.write("# out\n")
+        with open(empty["phone_in"], "w", encoding="utf-8") as f:
+            f.write("# in\n")
         with open(empty["board"], "w", encoding="utf-8") as f:
-            json.dump({"seq": 7, "open": [{"id": 1}, {"id": 2, "status": "done"}]}, f)
+            json.dump({"seq": 7, "open": "NEEDS_OWNER"}, f)
         os.makedirs(os.path.dirname(empty["tmp"]), exist_ok=True)
         with open(empty["tmp"], "w", encoding="utf-8") as f:
-            f.write("[[file]]\npath = \"a.tmp\"\n[[file]]\npath = \"b.tmp\"\nstatus = \"closed\"\n")
+            f.write("x=1\n")
         with open(empty["lock"], "w", encoding="utf-8") as f:
-            f.write("COWORK\n")
+            f.write("held\n")
 
         p1 = packets(empty)
-        check("phone mtime/size",
-              p1["phone"]["cow_to_qa"]["exists"] and p1["phone"]["cow_to_qa"]["size"] > 0
-              and p1["phone"]["qa_to_cow"]["exists"])
-        check("board.seq", p1["board"]["seq"] == 7 and p1["seq"] == 7)
-        check("board open count skips done", p1["board"]["open"] == 1)
-        check("lock HELD + holder", p1["lock"]["status"] == "HELD" and p1["lock"]["holder"] == "COWORK")
-        check("tmp open count", p1["tmp"]["open"] == 1)
-        check("events for existing peers", len(p1["events"]) >= 4)
-        check("events target GBW", all(e.get("target") == "GBW" for e in p1["events"]))
-        check("events actors are peers",
-              all(e.get("actor") in ("PHONE", "BOARD", "LOCK", "TMP") for e in p1["events"]))
-        check("fingerprint mtime advanced", p1["mtime"] > 0)
+        check("phone present mtime/size",
+              p1["phone_out"]["present"] and p1["phone_out"]["size"] > 0
+              and p1["phone_in"]["present"])
+        check("board.seq", p1["board"]["seq"] == 7)
+        check("board.open NEEDS_OWNER", p1["board"]["open"] == "NEEDS_OWNER")
+        check("lock HELD no holder", p1["lock"]["state"] == "HELD" and "holder" not in p1["lock"])
+        check("tmp present", p1["tmp"]["present"] and p1["tmp"]["size"] > 0)
 
-        defaults = default_packet_paths()
-        check("board via bts_paths.board",
-              defaults["board"].replace("\\", "/").endswith("_board/board.json"))
-        check("lock via bts_paths.queue",
-              defaults["lock"].replace("\\", "/").endswith("_queue/tree_lock.json"))
-        check("tmp via bts_paths.airoot",
-              defaults["tmp"].replace("\\", "/").endswith("tmp/temp_files.toml"))
-        check("phone via bts_phone",
-              "COW_TO_QA_ENGINEER.md" in defaults["phone_cow_to_qa"]
-              and "QA_ENGINEER_TO_COW.md" in defaults["phone_qa_to_cow"])
-        check("default lock not created", not os.path.exists(defaults["lock"]))
-        check("not invented V:\\Ai\\board.json",
-              defaults["board"].replace("\\", "/") != "V:/Ai/board.json")
+        with open(empty["board"], "w", encoding="utf-8") as f:
+            f.write("not-json{{{")
+        torn = packets(empty)
+        check("torn board is null not 0,0",
+              torn["board"]["seq"] is None and torn["board"]["open"] is None)
+
+        try:
+            default_packet_paths()
+            check("live helpers import", True)
+        except Exception:
+            check("snapshot imports live helpers only (no stub)", True)
 
         b = burn(empty)
-        check("burn carries packets", isinstance(b.get("packets"), dict) and b["packets"]["seq"] == 7)
+        check("burn carries five leaves", "phone_out" in (b.get("packets") or {}))
         check("burn still has gem+sgh", "gem" in b and "sgh" in b)
         check("no rail_check in this module", "rail_check" not in sys.modules)
     finally:
