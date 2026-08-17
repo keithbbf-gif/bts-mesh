@@ -4,6 +4,7 @@ bts_serve.py — the dashboard's server.  REPLACES `python -m http.server 8765`.
 WHY
   The dashboard needs three things a static file server cannot give it:
     /api/burn   live burn-rate for GEM (requests+tokens, free) and SGH (dollars+tokens, paid)
+                plus packets{} — stat of the phone pair, board.json, tree_lock, tmp/temp_files.toml
     /api/bench  run the real mesh <TEST> — the API rails that CORS blocks the browser from timing
     /api/state  cheap heartbeat
   Everything else is served exactly as before (same port, same in-pane YouTube fix — a file://
@@ -41,7 +42,285 @@ def _read_json(path, default=None):
         return default
 
 
-def burn():
+# ── LIVE PACKETS (phone / board / lock / tmp) ────────────────────────────────
+# Peer files. Nodes talk to surfaces directly; CoW is keeper, not the bus.
+# These are NOT CHANNELS through cowork. /api/burn only STATs them — no rail
+# probe, no rail_check, no dash.json rewrite, no bts_kdash_feed loop.
+#
+# Live Windows names (diagnosis): V:\Ai\COW_TO_QA_ENGINEER.md + QA_ENGINEER_TO_COW.md,
+# board.json, tree_lock|lock, tmp\temp_files.toml. In-repo docs/config copies win
+# if present; otherwise the V:\Ai\ constants (and bts_paths.ai when the research
+# tree is mounted). Absent lock → FREE.
+_LIVE_AI = r"V:\Ai"
+_PHONE_COW_TO_QA = "COW_TO_QA_ENGINEER.md"
+_PHONE_QA_TO_COW = "QA_ENGINEER_TO_COW.md"
+_BOARD_NAME = "board.json"
+_TMP_REL = ("tmp", "temp_files.toml")
+_LOCK_NAMES = ("tree_lock", "lock")
+
+
+def _ai_join(*parts):
+    """bts_paths.ai() when the research tree resolves; else None. Never raises."""
+    try:
+        import bts_paths
+        return bts_paths.ai(*parts)
+    except Exception:
+        return None
+
+
+def _peer_candidates(*rel):
+    """docs/config first, then the live V:\\Ai\\ constants, then the Ai sibling, then bts_paths."""
+    out = []
+    here_ai = os.path.dirname(HERE)
+    for base in (
+        os.path.join(HERE, "docs"),
+        os.path.join(HERE, "config"),
+        os.path.join(here_ai, "docs"),
+        os.path.join(here_ai, "config"),
+    ):
+        out.append(os.path.join(base, *rel))
+    out.append(os.path.join(_LIVE_AI, *rel))
+    out.append(os.path.join(here_ai, *rel))
+    p = _ai_join(*rel)
+    if p:
+        out.append(p)
+    return out
+
+
+def _pick_peer(candidates, canonical):
+    for p in candidates:
+        if p and os.path.isfile(p):
+            return p
+    return canonical
+
+
+def _pick_lock():
+    """First existing tree_lock or lock; else the live V:\\Ai\\tree_lock name (absent → FREE)."""
+    seen = []
+    for base in (
+        os.path.join(HERE, "docs"), os.path.join(HERE, "config"),
+        os.path.join(os.path.dirname(HERE), "docs"),
+        os.path.join(os.path.dirname(HERE), "config"),
+        _LIVE_AI, os.path.dirname(HERE),
+    ):
+        for name in _LOCK_NAMES:
+            p = os.path.join(base, name)
+            seen.append(p)
+            if os.path.isfile(p):
+                return p
+    via_ai = _ai_join("tree_lock")
+    if via_ai and os.path.isfile(via_ai):
+        return via_ai
+    for name in _LOCK_NAMES:
+        via_ai = _ai_join(name)
+        if via_ai and os.path.isfile(via_ai):
+            return via_ai
+    return os.path.join(_LIVE_AI, "tree_lock")
+
+
+def default_packet_paths():
+    """Resolved peer-file paths. Override in tests; do not invent a second registry."""
+    return {
+        "phone_cow_to_qa": _pick_peer(
+            _peer_candidates(_PHONE_COW_TO_QA),
+            os.path.join(_LIVE_AI, _PHONE_COW_TO_QA)),
+        "phone_qa_to_cow": _pick_peer(
+            _peer_candidates(_PHONE_QA_TO_COW),
+            os.path.join(_LIVE_AI, _PHONE_QA_TO_COW)),
+        "board": _pick_peer(
+            _peer_candidates(_BOARD_NAME),
+            os.path.join(_LIVE_AI, _BOARD_NAME)),
+        "lock": _pick_lock(),
+        "tmp": _pick_peer(
+            _peer_candidates(*_TMP_REL),
+            os.path.join(_LIVE_AI, *_TMP_REL)),
+    }
+
+
+def _stat_peer(path):
+    """mtime/size only. Missing file is honest absence, not an error."""
+    out = {"path": path, "exists": False, "mtime": None, "size": None}
+    if not path:
+        return out
+    try:
+        st = os.stat(path)
+    except OSError:
+        return out
+    out["exists"] = True
+    out["mtime"] = st.st_mtime
+    out["size"] = st.st_size
+    return out
+
+
+def _item_open(item):
+    if not isinstance(item, dict):
+        return True
+    if item.get("open") is False:
+        return False
+    st = str(item.get("status") or item.get("state") or "open").lower()
+    return st not in ("closed", "done", "released", "free")
+
+
+def _board_fields(path):
+    """board.seq + open count. Unreadable / odd shape → 0, 0 (stat still reports mtime/size)."""
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+    except Exception:
+        return 0, 0
+    if isinstance(data, list):
+        return len(data), sum(1 for i in data if _item_open(i))
+    if not isinstance(data, dict):
+        return 0, 0
+    seq = data.get("seq")
+    seq = int(seq) if isinstance(seq, int) else 0
+    raw = data.get("open")
+    if isinstance(raw, int):
+        return seq, raw
+    if isinstance(raw, list):
+        return seq, sum(1 for i in raw if _item_open(i))
+    n = 0
+    for key in ("items", "tasks", "cards", "entries"):
+        v = data.get(key)
+        if isinstance(v, list):
+            n += sum(1 for i in v if _item_open(i))
+        elif isinstance(v, dict):
+            n += sum(1 for i in v.values() if _item_open(i))
+    return seq, n
+
+
+def _tmp_open_count(path):
+    """open count from tmp/temp_files.toml. Stat-only otherwise — no directory walk."""
+    try:
+        try:
+            import tomllib
+        except ModuleNotFoundError:
+            import tomli as tomllib
+        with open(path, "rb") as f:
+            data = tomllib.load(f)
+    except Exception:
+        return 0
+    if not isinstance(data, dict):
+        return 0
+    raw = data.get("open")
+    if isinstance(raw, int):
+        return raw
+    if isinstance(raw, list):
+        return sum(1 for i in raw if _item_open(i))
+    n = 0
+    for key in ("files", "file", "temp_files", "temps", "open_files"):
+        v = data.get(key)
+        if isinstance(v, list):
+            n += sum(1 for i in v if _item_open(i))
+        elif isinstance(v, dict):
+            n += sum(1 for i in v.values() if _item_open(i))
+    if n:
+        return n
+    skip = {"meta", "config", "settings"}
+    return sum(1 for k, v in data.items()
+               if k not in skip and isinstance(v, (dict, list)))
+
+
+def _iso_from_mtime(mtime):
+    if not mtime:
+        return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(mtime))
+
+
+def _packet_events(phone_out, phone_in, board, lock, tmp, board_seq):
+    """Events the existing cockpit renderSignals / fireNewPackets already know how to paint.
+
+    Actor names are the peer files themselves (not a new NODES entry — posOf maps
+    unknowns to the hub). CoW is not inserted as a bus hop.
+    """
+    ev, i = [], 0
+    max_mtime = max(
+        [x.get("mtime") or 0 for x in (phone_out, phone_in, board, lock, tmp)],
+        default=0)
+    base = int((max_mtime or 0) * 1000) + int(board_seq or 0) * 1_000_000_000
+
+    def add(actor, target, event, detail, mtime, direction="out"):
+        nonlocal i
+        i += 1
+        ev.append({
+            "seq": base + i,
+            "ts": _iso_from_mtime(mtime),
+            "actor": actor,
+            "target": target,
+            "event": event,
+            "detail": detail,
+            "direction": direction,
+        })
+
+    if phone_out.get("exists"):
+        add("PHONE", "SGH", "note",
+            "COW_TO_QA %s B" % (phone_out.get("size") or 0),
+            phone_out.get("mtime"))
+    if phone_in.get("exists"):
+        add("PHONE", "COWORK", "note",
+            "QA_TO_COW %s B" % (phone_in.get("size") or 0),
+            phone_in.get("mtime"), direction="in")
+    if board.get("exists"):
+        add("BOARD", "ROLD", "note",
+            "seq=%s open=%s" % (board.get("seq") or 0, board.get("open") or 0),
+            board.get("mtime"))
+    if lock.get("status") == "FREE":
+        add("LOCK", "BUS", "STATUS", "FREE", lock.get("mtime"))
+    elif lock.get("exists"):
+        add("LOCK", "BUS", "STATUS",
+            "HELD %s" % (lock.get("holder") or "").strip(),
+            lock.get("mtime"))
+    if tmp.get("exists"):
+        add("TMP", "COWORK", "note",
+            "open=%s" % (tmp.get("open") or 0),
+            tmp.get("mtime"))
+    return ev
+
+
+def packets(paths=None):
+    """Stat the four peer files. Cheap: os.stat + two small reads. No rail I/O."""
+    p = paths or default_packet_paths()
+    phone_out = _stat_peer(p.get("phone_cow_to_qa"))
+    phone_in = _stat_peer(p.get("phone_qa_to_cow"))
+    board = _stat_peer(p.get("board"))
+    lock = _stat_peer(p.get("lock"))
+    tmp = _stat_peer(p.get("tmp"))
+
+    board_seq, board_open = (0, 0)
+    if board["exists"]:
+        board_seq, board_open = _board_fields(board["path"])
+    board["seq"] = board_seq
+    board["open"] = board_open
+
+    if lock["exists"]:
+        lock["status"] = "HELD"
+        holder = ""
+        try:
+            with open(lock["path"], encoding="utf-8", errors="replace") as f:
+                holder = f.readline().strip()[:80]
+        except Exception:
+            holder = ""
+        lock["holder"] = holder or None
+    else:
+        lock["status"] = "FREE"
+        lock["holder"] = None
+
+    tmp["open"] = _tmp_open_count(tmp["path"]) if tmp["exists"] else 0
+
+    mtimes = [x["mtime"] for x in (phone_out, phone_in, board, lock, tmp) if x.get("mtime")]
+    out = {
+        "phone": {"cow_to_qa": phone_out, "qa_to_cow": phone_in},
+        "board": board,
+        "lock": lock,
+        "tmp": tmp,
+        "mtime": max(mtimes) if mtimes else 0,
+        "seq": board_seq,
+        "events": _packet_events(phone_out, phone_in, board, lock, tmp, board_seq),
+    }
+    return out
+
+
+def burn(packet_paths=None):
     """Live burn-rate for both rails.
 
     The two rails are NOT the same kind of meter, and the dashboard should not pretend they are:
@@ -96,6 +375,8 @@ def burn():
         "usd_per_ktok": round(spent / ((ti + to) / 1000.0), 4) if (ti + to) else None,
         "autoreload": True,   # $5 at a time -> the hard-stop is a safety device, say so
     }
+    # Peer-file packets: phone / board / lock / tmp. Stat only — not a rail probe.
+    out["packets"] = packets(packet_paths)
     return out
 
 
@@ -214,7 +495,68 @@ def _whos_on_port(port=PORT):
         return "foreign"          # something is there, but it cannot answer /api/state -> not us
 
 
+def _selftest():
+    """Throwaway dir. Proves packets shape, absent lock → FREE, board.seq + open, no rail import."""
+    import tempfile, shutil
+    d = tempfile.mkdtemp(prefix="bts_burn_packets_")
+    ok = True
+
+    def check(name, cond):
+        nonlocal ok
+        print(("  PASS " if cond else "  FAIL ") + name)
+        if not cond:
+            ok = False
+
+    try:
+        empty = {
+            "phone_cow_to_qa": os.path.join(d, _PHONE_COW_TO_QA),
+            "phone_qa_to_cow": os.path.join(d, _PHONE_QA_TO_COW),
+            "board": os.path.join(d, _BOARD_NAME),
+            "lock": os.path.join(d, "tree_lock"),
+            "tmp": os.path.join(d, "tmp", "temp_files.toml"),
+        }
+        p0 = packets(empty)
+        check("absent lock is FREE", p0["lock"]["status"] == "FREE" and not p0["lock"]["exists"])
+        check("absent peers have no mtime", p0["mtime"] == 0 and p0["seq"] == 0)
+        check("phone pair keys present",
+              "cow_to_qa" in p0["phone"] and "qa_to_cow" in p0["phone"])
+
+        with open(empty["phone_cow_to_qa"], "w", encoding="utf-8") as f:
+            f.write("# cow -> qa\n")
+        with open(empty["phone_qa_to_cow"], "w", encoding="utf-8") as f:
+            f.write("# qa -> cow\n")
+        with open(empty["board"], "w", encoding="utf-8") as f:
+            json.dump({"seq": 7, "open": [{"id": 1}, {"id": 2, "status": "done"}]}, f)
+        os.makedirs(os.path.dirname(empty["tmp"]), exist_ok=True)
+        with open(empty["tmp"], "w", encoding="utf-8") as f:
+            f.write("[[file]]\npath = \"a.tmp\"\n[[file]]\npath = \"b.tmp\"\nstatus = \"closed\"\n")
+        with open(empty["lock"], "w", encoding="utf-8") as f:
+            f.write("COWORK\n")
+
+        p1 = packets(empty)
+        check("phone mtime/size",
+              p1["phone"]["cow_to_qa"]["exists"] and p1["phone"]["cow_to_qa"]["size"] > 0
+              and p1["phone"]["qa_to_cow"]["exists"])
+        check("board.seq", p1["board"]["seq"] == 7 and p1["seq"] == 7)
+        check("board open count skips done", p1["board"]["open"] == 1)
+        check("lock HELD + holder", p1["lock"]["status"] == "HELD" and p1["lock"]["holder"] == "COWORK")
+        check("tmp open count", p1["tmp"]["open"] == 1)
+        check("events for existing peers", len(p1["events"]) >= 4)
+        check("fingerprint mtime advanced", p1["mtime"] > 0)
+
+        b = burn(empty)
+        check("burn carries packets", isinstance(b.get("packets"), dict) and b["packets"]["seq"] == 7)
+        check("burn still has gem+sgh", "gem" in b and "sgh" in b)
+        check("no rail_check in this module", "rail_check" not in sys.modules)
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+    print("SELFTEST %s" % ("PASS" if ok else "FAIL"))
+    return 0 if ok else 1
+
+
 if __name__ == "__main__":
+    if "--selftest" in sys.argv:
+        raise SystemExit(_selftest())
     who = _whos_on_port()
     if who == "ours":
         print("bts_serve already running on %d — nothing to do." % PORT)
@@ -229,7 +571,7 @@ if __name__ == "__main__":
         raise SystemExit(3)
     srv = ThreadingHTTPServer(("127.0.0.1", PORT), H)   # localhost ONLY — this process can spend
     print("BTS dashboard server -> http://127.0.0.1:%d/jack_command.html" % PORT)
-    print("  /api/burn      live GEM + SGH burn rate")
+    print("  /api/burn      live GEM + SGH burn rate + peer packets (phone/board/lock/tmp)")
     print("  /api/bench     real mesh <TEST> (add ?free=1 to spend nothing)")
     print("  /api/surfaces  ITC / GDX / ODX / local capacity")
     print("  /api/policy    SPEED<->COST dial (?bias=0..100)")

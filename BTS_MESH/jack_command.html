@@ -2663,10 +2663,45 @@ function renderCredit(){
    If /api/burn is unreachable we fall back to the snapshot and SAY SO, rather than silently
    showing stale numbers as if they were live — same rule as everywhere else on this page.
 
-   NOTE ON PACKETS: those are a DIFFERENT feed (mesh_state.json, polled 1 s, SEQ-GATED). No packets
-   means no traffic on the wire, which is CORRECT — "motion on the screen must mean motion on the
-   wire". Do not "fix" that by animating it. */
+   NOTE ON PACKETS: mesh_state.json (polled 1 s, SEQ-GATED) is still the CHANNEL feed. Phone /
+   board / lock / tmp are PEER FILES, not channels through cowork — they arrive on the same
+   /api/burn poll (no second poller, no new NODES entry). On packets.mtime / packets.seq change
+   we call the existing renderSignals / fireNewPackets. A quiet peer set stays still. */
 let _burnLive = false;
+let _burnPktSig = null, _burnPktWatermark = -1;
+function packetsToEvents(p){
+  if (p && Array.isArray(p.events) && p.events.length) return p.events;
+  const ev = [];
+  if (!p) return ev;
+  let seq = (typeof p.seq === "number") ? p.seq : 0;
+  const ts = new Date().toISOString();
+  const add = (actor, target, event, detail, direction) => {
+    ev.push({seq: ++seq, ts, actor, target, event, detail, direction: direction || "out"});
+  };
+  const ph = p.phone || {};
+  if (ph.cow_to_qa && ph.cow_to_qa.mtime) add("PHONE","SGH","note","COW_TO_QA "+(ph.cow_to_qa.size||0)+" B");
+  if (ph.qa_to_cow && ph.qa_to_cow.mtime) add("PHONE","COWORK","note","QA_TO_COW "+(ph.qa_to_cow.size||0)+" B","in");
+  if (p.board && p.board.mtime) add("BOARD","ROLD","note","seq="+(p.board.seq||0)+" open="+(p.board.open||0));
+  if (p.lock && p.lock.status === "FREE") add("LOCK","BUS","STATUS","FREE");
+  else if (p.lock && p.lock.mtime) add("LOCK","BUS","STATUS","HELD");
+  if (p.tmp && p.tmp.mtime) add("TMP","COWORK","note","open="+(p.tmp.open||0));
+  return ev;
+}
+function paintLivePackets(p){
+  const sig = String(p && p.mtime != null ? p.mtime : 0) + ":" + String(p && p.seq != null ? p.seq : 0);
+  if (sig === _burnPktSig) return;                         /* mtime/seq gated: no change -> still */
+  const first = (_burnPktSig === null);
+  _burnPktSig = sig;
+  const ev = packetsToEvents(p);
+  renderSignals(ev);
+  /* fireNewPackets shares _pktWatermark with the mesh_state poller. Park ours beside it so a
+     peer-file seq cannot starve (or flood) the channel feed. Same function, two watermarks. */
+  const saved = _pktWatermark;
+  _pktWatermark = _burnPktWatermark;
+  fireNewPackets(ev, first);
+  _burnPktWatermark = _pktWatermark;
+  _pktWatermark = saved;
+}
 async function pollBurn(){
   let live = null;
   if (typeof API === "undefined" || API !== null) {
@@ -2676,6 +2711,7 @@ async function pollBurn(){
     }catch(e){ live = null; }
   }
   await loadSnap();                       /* still needed: surfaces, credit, policy, bench */
+  if (live && live.packets) paintLivePackets(live.packets);
   if (live && (live.gem || live.sgh)) {
     if (!SNAP) SNAP = {};
     SNAP.burn = live;                     /* LIVE burn wins over the frozen snapshot */
