@@ -19,8 +19,7 @@ WHAT IT CHECKS
 
 V:\\Ai\\BU.MD is also checked for POINTER SHAPE, not mere existence. A 46 KB mailbox or
 monolith that happens to contain one `POINTER:` line used to close GREEN. That is a false
-green. The boot pointer must be short and start with `POINTER:` or the `BOOT POINTER`
-banner. tidyup_bu.is_pointer_shaped is the predicate; tidyup_bu.py is the writer.
+green. The file must be short and start with `POINTER:` or a `BOOT POINTER` banner.
 
 That last rule is the one that matters. A checker that silently ignores what it does not
 understand reports green on a file it never read - which is the same class of defect as the
@@ -59,10 +58,6 @@ except Exception as e:                                    # fail loudly, never g
     print("FATAL: cannot resolve the research tree via bts_paths: %s" % e)
     sys.exit(2)
 
-if _HERE not in sys.path:
-    sys.path.insert(0, _HERE)
-from tidyup_bu import is_ai_bu, is_pointer_shaped
-
 # V:\Ai is a SIBLING of the research tree, not inside it. On Windows it is a real path; in the
 # sandbox it is its own mount. Resolve it the same way the tree is resolved - never hardcode.
 def _ai_root() -> str:
@@ -96,6 +91,31 @@ CONTROL_DOCS = [
 if AI_ROOT:
     CONTROL_DOCS += [os.path.join(AI_ROOT, "BU.MD"),
                      os.path.join(AI_ROOT, "Streams", "PLM_TODOS.md")]  # tidied 2026-07-31
+
+# V:\Ai\BU.MD GREEN is shape, not existence. A 46 KB mailbox with one POINTER: line is RED.
+_AI_BU_MAX_BYTES = 2048
+_AI_BU_MAX_LINES = 8
+_AI_BU_PTR = re.compile(r"^POINTER:\s*(\S.+?)\s*$")
+
+
+def _is_ai_bu(doc: str) -> bool:
+    return os.path.normpath(doc).replace("\\", "/").lower().rstrip("/").endswith("/ai/bu.md")
+
+
+def _ai_bu_pointer_shaped(text: str, size: int) -> bool:
+    if size > _AI_BU_MAX_BYTES or size == 0:
+        return False
+    lines = [ln.strip() for ln in text.lstrip("\ufeff").splitlines() if ln.strip()]
+    if not lines or len(lines) > _AI_BU_MAX_LINES:
+        return False
+    i = 0
+    if lines[0].lstrip("#").strip().upper().startswith("BOOT POINTER"):
+        i = 1
+        if i >= len(lines):
+            return False
+    if not _AI_BU_PTR.match(lines[i]):
+        return False
+    return sum(1 for ln in lines if ln.startswith("POINTER:")) == 1
 
 # 🔴 APPEND-ONLY NARRATIVE — added 2026-08-11. These documents are PROSE BY CONSTRUCTION.
 #
@@ -192,9 +212,9 @@ def check(docs=None, verbose=True):
             continue
         # V:\Ai\BU.MD: GREEN requires pointer SHAPE, not existence. A mailbox or
         # monolith with one POINTER: line inside is the false green this closes.
-        if is_ai_bu(doc):
+        if _is_ai_bu(doc):
             raw = open(doc, "rb").read()
-            if not is_pointer_shaped(raw.decode("utf-8", "replace"), size=len(raw)):
+            if not _ai_bu_pointer_shaped(raw.decode("utf-8", "replace"), size=len(raw)):
                 fails.append((doc, "<the boot pointer itself>",
                               "NOT POINTER-SHAPED (need a short file starting with "
                               "POINTER: or BOOT POINTER; a POINTER line inside a "

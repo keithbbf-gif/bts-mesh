@@ -182,15 +182,12 @@ the dated-handoff scheme rotted **four times** (12c → 12d → 07-15 → 07-17)
 a warning saying it would, and by 07-20 six duplicate dated handoffs also sat in `00_WORKING\`, so the
 glob returned **15 files across two directories**.
 
-- **The boot pointer is `V:\Ai\BU.MD`.** Read it at `BootUP!`; **TidyUP! writes a POINTER line only.**
-  Short file. Starts with `POINTER:` or the `BOOT POINTER` banner. Never a monolith, never a mailbox.
-  `tidyup_bu.py --step9` is the writer. `verify_pointers` is RED unless the file is pointer-shaped.
+- **The boot pointer is `V:\Ai\BU.MD`.** Read it at `BootUP!`; **overwrite it at `TidyUP!`.**
   No glob, no date, no "newest" to get wrong.
 - **NEVER create a new dated handoff.** Old `00_NEXT_SESSION_HANDOFF_*` files are **ARCHIVE** — do not
   read them for state, do not add to them.
-- **`V:\Research4\BU.MD` is DETAIL BACKLOG ONLY and is NOT written at TidyUP.** It remains a live
-  READ path (`mesh_test.py`, `bts_paths.p()`). Two live handoffs is the exact defect that rotted
-  the dated scheme four times. `bts_tools` and `tidyup_bu` refuse writes to this path.
+- **`V:\Research4\BU.MD` is DETAIL BACKLOG ONLY and is NOT written at TidyUP.** Two live handoffs is
+  the exact defect that rotted the dated scheme four times.
 - **One pointer per thing.** Three state files would be three pointers.
   > Keith, 2026-07-29: *"I thought we were doing like a header or footer instead of three different
   > files on the streams."*
