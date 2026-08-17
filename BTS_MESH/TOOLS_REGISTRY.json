@@ -190,7 +190,17 @@
    "author": "Cowork/Claude (2026-07-31)",
    "license": "ours",
    "location": "V:\\Research4\\Ai\\ROLD\\verify_pointers.py",
-   "utility": "Walks every POINTER/INCLUDEIF/OVERRIDE/PRECEDENCE line in every control document and resolves it. Exit 1 if any fails. UNKNOWN OPCODE IS A FAILURE, never a skip. --selftest plants a broken pointer and an unknown opcode and asserts both are caught. Found 45 real faults on its first run. 125 pointers GREEN 2026-07-31."
+   "utility": "Walks every POINTER/INCLUDEIF/OVERRIDE/PRECEDENCE line in every control document and resolves it. Exit 1 if any fails. UNKNOWN OPCODE IS A FAILURE, never a skip. V:\\Ai\\BU.MD GREEN requires pointer SHAPE (short, starts with POINTER: or BOOT POINTER), not mere existence — a 46 KB mailbox with one POINTER line is RED. --selftest plants a broken pointer, an unknown opcode, and a mailbox-shaped BU.MD. Found 45 real faults on its first run. 125 pointers GREEN 2026-07-31."
+  },
+  {
+   "id": "tidyup_bu",
+   "name": "tidyup_bu.py — TidyUP STEP 8/9 writer for the boot pointer",
+   "kind": "custom",
+   "author": "Cowork/Claude (2026-08-17)",
+   "license": "ours",
+   "location": "V:\\Research4\\Ai\\ROLD\\tidyup_bu.py",
+   "invoke": "python tidyup_bu.py --selftest  ·  --step8 --src P --dst P [--pointer-source P]  ·  --step9 --path P --target P",
+   "utility": "The TidyUP writer that STEP 8 and STEP 9 did not have. STEP 8 copies V:\\Ai\\BU.MD onto MIRROR_BU only when the source is pointer-shaped; a mailbox or monolith is SKIPPED. STEP 9 writes a POINTER line only to V:\\Ai\\BU.MD, refuses a mailbox already in place, and never writes V:\\Research4\\BU.MD. Binds the smash holes that would publish the QA mailbox or emit a monolith onto the boot pointer."
   },
   {
    "id": "scars",

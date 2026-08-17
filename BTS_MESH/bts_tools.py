@@ -39,7 +39,7 @@ NOT a network-write tool: web_get is READ-ONLY (GET). No POST/PUT. Publishing
   stays on the audited R2 bat. GitHub write will be a separate, PAT-scoped tool.
 """
 from __future__ import annotations
-import os, re, glob as _glob, fnmatch, json, shutil, hashlib, datetime
+import os, re, glob as _glob, fnmatch, json, shutil, hashlib, datetime, tempfile
 import urllib.request, urllib.error
 
 # ---- allowed roots (both host + sandbox spellings) -------------------------
@@ -69,6 +69,20 @@ def _guard(path: str) -> str:
         if n == rn or n.startswith(rn + "/"):
             return path
     raise ToolDenied(f"BLOCKED: '{path}' escapes the allowed roots {_ROOTS}.")
+
+
+def _is_research4_bu(path: str) -> bool:
+    """V:\\Research4\\BU.MD in any spelling. Live READ path. Never a write target."""
+    return _norm(path).endswith("/research4/bu.md")
+
+
+def _refuse_research4_bu_write(path: str) -> None:
+    """STEP 9 smash hole: never write the detail backlog. Reads stay allowed."""
+    if _is_research4_bu(path):
+        raise ToolDenied(
+            "BLOCKED: V:\\Research4\\BU.MD is DETAIL BACKLOG, a live READ path. "
+            "Never written at TidyUP. Boot pointer is V:\\Ai\\BU.MD (POINTER line only)."
+        )
 
 # ---- read / write surface --------------------------------------------------
 class IntegrityError(IOError):
@@ -116,6 +130,7 @@ def write(path: str, content: str, overwrite: bool = True, backup: bool = False)
     replace a file, but a script that always meant to should not have to change.
     """
     _guard(path)
+    _refuse_research4_bu_write(path)
     existed = os.path.exists(path)
     if existed and not overwrite:
         st = os.stat(path)
@@ -160,6 +175,7 @@ def mkdir(path: str) -> dict:
 
 def move(src: str, dst: str, overwrite: bool = False) -> dict:
     _guard(src); _guard(dst)
+    _refuse_research4_bu_write(dst)
     if not os.path.exists(src):
         raise FileNotFoundError(f"move: source does not exist: {src}")
     if os.path.exists(dst) and not overwrite:
@@ -190,6 +206,7 @@ def delete(path: str, recursive: bool = False, i_mean_it: bool = False) -> dict:
 
 def append(path: str, content: str) -> dict:
     _guard(path)
+    _refuse_research4_bu_write(path)
     with open(path, "a", encoding="utf-8", newline="") as f:   # see write(): no CRLF translation
         f.write(content)
     return {"ok": True, "path": path, "appended": len(content.encode())}
@@ -197,6 +214,7 @@ def append(path: str, content: str) -> dict:
 def edit(path: str, old: str, new: str, count: int = 1) -> dict:
     """Exact-string replace, like the upstream edit tool. Fails if old absent/ambiguous."""
     _guard(path)
+    _refuse_research4_bu_write(path)
     txt = read(path)
     n = txt.count(old)
     if n == 0:
@@ -302,6 +320,19 @@ def selftest() -> dict:
             res["allowed"].append(p)
         except ToolDenied:
             res["wrongly_denied"].append(p)
+
+    # MUST DENY WRITE — V:\Research4\BU.MD is a live READ path. A path under /tmp
+    # that merely ends in research4/bu.md still matches the write refuse, and
+    # passes _guard, so this is a real write attempt, not a confinement miss.
+    bu_probe = os.path.join(tempfile.mkdtemp(prefix="bts_bu_"), "research4", "BU.MD")
+    os.makedirs(os.path.dirname(bu_probe), exist_ok=True)
+    try:
+        write(bu_probe, "monolith\n")
+        res["wrongly_allowed"].append(bu_probe)
+    except ToolDenied:
+        res["denied"].append(bu_probe)
+    if os.path.exists(bu_probe):
+        res["wrongly_allowed"].append(bu_probe + " (file landed)")
 
     res["ok"] = not res["wrongly_allowed"] and not res["wrongly_denied"]
     return res

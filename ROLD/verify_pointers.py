@@ -17,6 +17,11 @@ WHAT IT CHECKS
   PRECEDENCE: <ordered list>                -> must be non-empty
   <ANYTHING ELSE>:                          -> an UNKNOWN OPCODE IS A FAILURE, never a skip.
 
+V:\\Ai\\BU.MD is also checked for POINTER SHAPE, not mere existence. A 46 KB mailbox or
+monolith that happens to contain one `POINTER:` line used to close GREEN. That is a false
+green. The boot pointer must be short and start with `POINTER:` or the `BOOT POINTER`
+banner. tidyup_bu.is_pointer_shaped is the predicate; tidyup_bu.py is the writer.
+
 That last rule is the one that matters. A checker that silently ignores what it does not
 understand reports green on a file it never read - which is the same class of defect as the
 mount that returned a clean, specific, wrong answer (SCARS S-28).
@@ -53,6 +58,10 @@ try:
 except Exception as e:                                    # fail loudly, never guess a root
     print("FATAL: cannot resolve the research tree via bts_paths: %s" % e)
     sys.exit(2)
+
+if _HERE not in sys.path:
+    sys.path.insert(0, _HERE)
+from tidyup_bu import is_ai_bu, is_pointer_shaped
 
 # V:\Ai is a SIBLING of the research tree, not inside it. On Windows it is a real path; in the
 # sandbox it is its own mount. Resolve it the same way the tree is resolved - never hardcode.
@@ -181,6 +190,16 @@ def check(docs=None, verbose=True):
         if not os.path.exists(doc):
             fails.append((doc, "<the control document itself>", "MISSING DOCUMENT"))
             continue
+        # V:\Ai\BU.MD: GREEN requires pointer SHAPE, not existence. A mailbox or
+        # monolith with one POINTER: line inside is the false green this closes.
+        if is_ai_bu(doc):
+            raw = open(doc, "rb").read()
+            if not is_pointer_shaped(raw.decode("utf-8", "replace"), size=len(raw)):
+                fails.append((doc, "<the boot pointer itself>",
+                              "NOT POINTER-SHAPED (need a short file starting with "
+                              "POINTER: or BOOT POINTER; a POINTER line inside a "
+                              "mailbox/monolith is a FALSE GREEN)"))
+                continue
         narrative = _is_narrative(doc)
         in_fence = False
         with open(doc, encoding="utf-8", errors="replace") as fh:
@@ -274,13 +293,29 @@ def selftest() -> int:
     open(nar_bad, "w", encoding="utf-8").write(
         "POINTER: %s\n\n**GEM: prose that is not an opcode.**\n" % missing)
 
-    print("--- selftest 1/4: broken pointer + unknown opcode, expecting RED ---")
+    # 5 + 6: V:\Ai\BU.MD shape. Existence of a POINTER line inside a mailbox used
+    # to close GREEN. Named .../Ai/BU.MD so is_ai_bu() fires.
+    ai_dir = os.path.join(d, "Ai")
+    os.makedirs(ai_dir, exist_ok=True)
+    mailbox = os.path.join(ai_dir, "BU.MD")
+    open(mailbox, "w", encoding="utf-8").write(
+        "POINTER: %s\n\n" % good + ("QA mailbox line\n" * 2500))
+    ai_ok_dir = tempfile.mkdtemp(prefix="ptrtest_aibu_")
+    os.makedirs(os.path.join(ai_ok_dir, "Ai"), exist_ok=True)
+    ai_ok = os.path.join(ai_ok_dir, "Ai", "BU.MD")
+    open(ai_ok, "w", encoding="utf-8").write("BOOT POINTER -- V:\\Ai\\BU.MD\nPOINTER: %s\n" % good)
+
+    print("--- selftest 1/6: broken pointer + unknown opcode, expecting RED ---")
     n = check([doc])
     clean = check([clean_doc], verbose=False)
-    print("--- selftest 3/4: narrative doc, prose only, expecting GREEN ---")
+    print("--- selftest 3/6: narrative doc, prose only, expecting GREEN ---")
     nar_clean = check([nar_ok])
-    print("--- selftest 4/4: narrative doc with a BROKEN POINTER, expecting RED ---")
+    print("--- selftest 4/6: narrative doc with a BROKEN POINTER, expecting RED ---")
     nar_broken = check([nar_bad])
+    print("--- selftest 5/6: mailbox BU.MD with a valid POINTER line, expecting RED ---")
+    mailbox_n = check([mailbox])
+    print("--- selftest 6/6: pointer-shaped BU.MD, expecting GREEN ---")
+    shaped_n = check([ai_ok])
 
     print("-" * 78)
     print("  broken doc      = %d  (want >=2)" % n)
@@ -288,12 +323,16 @@ def selftest() -> int:
     print("  narrative prose = %d  (want 0  -- the exemption works)" % nar_clean)
     print("  narrative FAULT = %d  (want >=1 -- the exemption did NOT disable pointer checking)"
           % nar_broken)
-    if n >= 2 and clean == 0 and nar_clean == 0 and nar_broken >= 1:
+    print("  mailbox BU.MD   = %d  (want >=1 -- shape, not existence)" % mailbox_n)
+    print("  shaped BU.MD    = %d  (want 0)" % shaped_n)
+    if (n >= 2 and clean == 0 and nar_clean == 0 and nar_broken >= 1
+            and mailbox_n >= 1 and shaped_n == 0):
         # ASCII ONLY. An em dash here came back as mojibake in the queue log on the very run
         # that proved this fix - S-134's lesson generalized: anything a scheduler may redirect
         # must be ASCII on stdout, not just free of emoji.
-        print("SELFTEST PASS - RED on a broken pointer, GREEN on prose, and STILL RED on a")
-        print("                broken pointer inside an append-only narrative document.")
+        print("SELFTEST PASS - RED on a broken pointer, GREEN on prose, STILL RED on a")
+        print("                broken pointer inside an append-only narrative document,")
+        print("                and RED on a mailbox BU.MD that merely CONTAINS a POINTER line.")
         return 0
     print("SELFTEST FAIL — this checker cannot be trusted.")
     return 1

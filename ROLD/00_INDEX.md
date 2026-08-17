@@ -48,7 +48,7 @@ POINTER: V:\Ai\BFast\BFAST.md              BFast — Bridge File Architecture Sy
 POINTER: V:\Ai\BFast\bfast.py               its entry point + config authority (V:\Ai\BFast\roots.json)
 POINTER: Ai\00_MESH_CHARTER.md            roles · nodes · surfaces · channels · tasking + verification SOP
 POINTER: Ai\00_TOOLS_INDEX.md             do we already have this? ASK BEFORE WRITING ANY SCRIPT
-POINTER: V:\Ai\BU.MD                      LIVE STATE. Read at BootUP!, overwritten at TidyUP!
+POINTER: V:\Ai\BU.MD                      BOOT POINTER. POINTER line only. Not a mailbox. Not a monolith.
 POINTER: V:\Ai\Streams\PLM_TODOS.md               the PLUMBING backlog, prioritized
 POINTER: V:\Ai\Research\ROLD_POINTER_DESIGN_2026-07-30.md   why this repo is shaped this way
 ```
@@ -59,14 +59,15 @@ is a copy, and copies rot.** So:
 ```
 PRECEDENCE: V:\Ai\BU.MD  >  Ai\ROLD\STREAMS\STREAM_*.md      (for anything that is STATE)
 OVERRIDE: STREAM_*.md = METHOD AND POSTURE ONLY — how this stream works, what "done" means
-OVERRIDE: BU.MD = LIVE STATE ONLY — what is open right now, this session
+OVERRIDE: BU.MD = BOOT POINTER ONLY — one POINTER: line to live state. Not the state itself.
 ```
 An open item lives in **exactly one** of them. The plumbing backlog is `V:\Ai\Streams\PLM_TODOS.md`; it is
 pointed at, never duplicated.
 
 ## THE CHECK THAT MAKES THIS REAL
 ```
-POINTER: Ai\ROLD\verify_pointers.py        the resolver — walks every POINTER/INCLUDEIF line, exits non-zero
+POINTER: Ai\ROLD\verify_pointers.py        the resolver — walks every POINTER/INCLUDEIF line, exits non-zero; V:\Ai\BU.MD GREEN requires pointer shape
+POINTER: Ai\ROLD\tidyup_bu.py              TidyUP STEP 8/9 writer — pointer-shaped copy only; POINTER line only; never Research4\BU.MD
 POINTER: Ai\ROLD\scars.py                  the scar record as a QUERY (--rebuild refuses on cited!=listed)
 ```
 > **The Desktop wrapper is NOT pointed at, deliberately.** See the rule below — a `.bat` on the

@@ -3,7 +3,7 @@
 POINTER: Ai\ROLD\RULES.md    (why — do not restate a rule here)
 POINTER: Ai\ROLD\RAILS.md    (paths, mounts, endpoints — do not restate a constant here)
 POINTER: Ai\ROLD\SCARS.md    (what went wrong before — do not retell a failure here)
-POINTER: V:\Ai\BU.MD         (live state; TidyUP! overwrites it)
+POINTER: V:\Ai\BU.MD         (boot pointer; TidyUP! writes a POINTER line only)
 
 ---
 
@@ -288,10 +288,13 @@ POINTER: Ai\ROLD\SCARS.md
 
 a. **MIRROR FIRST** — copy this session's changed control files into `PhD2_DATA_ARCHIVE\00_WORKING\`
    host-side (Read → Write). A publish is not a sync; an unmirrored file republishes stale forever.
-   🔴 **`V:\Ai\BU.MD` → `00_WORKING\MIRROR_BU.md` IS MANDATORY AND IS ALWAYS LAST**, because step 9
-   rewrites BU.MD after this step runs. **It lives outside the published tree, so it is the one file
-   that is never carried automatically.** *(Found stale by a full day on 2026-08-02 — the boot
-   pointer, the single file whose loss costs the most, was the only one with no off-machine copy.)*
+   🔴 **`V:\Ai\BU.MD` → `00_WORKING\MIRROR_BU.md` IS NOT A BLIND COPY.** `V:\Ai\BU.MD` may be a QA
+   mailbox, not a pointer. Copying it publishes the mailbox over the last good mirror.
+   **Run `Ai\ROLD\tidyup_bu.py --step8 --src <BU.MD> --dst <MIRROR_BU.md>`.** It copies ONLY a
+   pointer-shaped file (short, starts with `POINTER:` or the `BOOT POINTER` banner), or from
+   `--pointer-source` if that file is pointer-shaped. If `V:\Ai\BU.MD` is a mailbox or monolith,
+   the copy is **SKIPPED** and `MIRROR_BU.md` is left alone. A pointer whose target IS
+   `MIRROR_BU.md` is also skipped (self-clobber).
    ⚠ **Check WHICH FILES SHOULD BE MIRRORED, not which ones you mirrored.** Verifying your own list
    against itself is a check that can only ever pass.
 b. Run the native Windows bat. Prefer the hidden/scheduled route (BootUP step 1): `publish_r2_silent.vbs`
@@ -302,14 +305,20 @@ d. **VERIFY live↔mirror by MD5, WITH A NEGATIVE CONTROL** (a file that should 
 e. **Cloud-verify SERVED BYTES:** `web_fetch` a file written THIS session and confirm its *content* —
    HTTP 200 is not verification.
 
-### STEP 9 [orig. 6] — OVERWRITE THE BOOT POINTER.
+### STEP 9 [orig. 6] — WRITE THE BOOT POINTER. POINTER LINE ONLY.
 
 OVERRIDE: tidyup_target = V:\Ai\BU.MD
-Overwrite `V:\Ai\BU.MD`: current stream, cross-stream blockers, the four stream rows (what is open in
-each), rulings owed by Keith, first actions, open flags.
+**Run `Ai\ROLD\tidyup_bu.py --step9 --path V:\Ai\BU.MD --target <live-state-path>`.**
+`V:\Ai\BU.MD` receives a `BOOT POINTER` banner and one `POINTER:` line. **Never a monolith.
+Never analysis. Never a report.** Operational state lives at the POINTER target, not in
+`V:\Ai\BU.MD` itself.
+If `V:\Ai\BU.MD` is already a mailbox or monolith, the writer **REFUSES** — move that file
+first. Do not clobber it in place.
 **Fixed name, fixed path. NEVER create a new dated handoff.**
 
-### 🔴🔴 BU.MD CARRIES OPERATIONAL STATE ONLY. NO ANALYSIS. — Keith, 2026-08-03
+### 🔴🔴 THE POINTER TARGET CARRIES OPERATIONAL STATE ONLY. NO ANALYSIS. — Keith, 2026-08-03
+`V:\Ai\BU.MD` itself is the POINTER file (banner + one `POINTER:` line). The contamination
+rule below applies to the file it points at — not as license to emit a monolith onto `V:\Ai\BU.MD`.
 *"Don't load anything on BU that will contaminate the session. Keep our questions, comments,
 evaluations, etc. about the case isolated from the BU at the start."*
 

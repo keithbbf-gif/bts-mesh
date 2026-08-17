@@ -337,7 +337,7 @@ POINTER: V:\Research4\Ai\00_TOOLS_INDEX.md     — every tool we already own (re
 POINTER: V:\Research4\Ai\BTS_MESH\TOOLS_REGISTRY.json — the same list as JSON. ⚠ BOTH are hand-maintained; NO generator exists; edit both or one goes silently stale
 POINTER: V:\Research4\Ai\BTS_MESH\SURFACE_POLICY.md   — the retrieval ladder
 POINTER: V:\Research4\Ai\BTS_MESH\bts_identity.py     — MESH_ID = "KMesh" · PEERS · federation_ready()
-POINTER: V:\Ai\BU.MD                           — the boot pointer and live state (FIXED name, FIXED path)
+POINTER: V:\Ai\BU.MD                           — the boot pointer (POINTER line only; FIXED name, FIXED path)
 POINTER: V:\Ai\Streams\PLM_TODOS.md                    — the PLUMBING backlog
 POINTER: V:\Ai\Legal\                          — the case tree. Nothing from it is ever copied into Research4
 
