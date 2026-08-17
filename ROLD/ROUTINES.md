@@ -280,8 +280,7 @@ the ROLD repository if a new item class appeared this session.
 
 ### STEP 7 [orig. 4b] — TOOLS: IF THIS SESSION BUILT ANYTHING REUSABLE, EDIT **BOTH** FILES IN THE SAME TURN.
 
-`Ai\00_TOOLS_INDEX.md` **AND** `BTS_MESH\TOOLS_REGISTRY.json`. Both are hand-maintained; **no generator
-exists**, so editing one leaves the other silently stale.
+`Ai\00_TOOLS_INDEX.md` **AND** `BTS_MESH\TOOLS_REGISTRY.json`. Drift is checked by `BTS_MESH\tools_sync.py --check`.
 POINTER: Ai\ROLD\SCARS.md
 
 ### STEP 8 [orig. 5] — R2 PUBLISH + CLOUD-VERIFY. **CLAUDE RUNS IT, NOT KEITH.**
