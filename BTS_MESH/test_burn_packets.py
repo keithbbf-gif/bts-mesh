@@ -79,6 +79,10 @@ try:
     b = S.burn(paths)
     check("packets on burn", "phone_out" in b["packets"] and "lock" in b["packets"])
     check("gem+sgh still there", "gem" in b and "sgh" in b)
+    check("kmesh on burn", isinstance(b.get("kmesh"), dict))
+    check("kmesh has no Vertex node",
+          "vertex" not in {str(n.get("id") or "").lower()
+                           for n in (b.get("kmesh") or {}).get("nodes") or []})
     check("no rail_check imported", "rail_check" not in sys.modules)
 finally:
     shutil.rmtree(d, ignore_errors=True)

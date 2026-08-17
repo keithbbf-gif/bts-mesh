@@ -399,6 +399,11 @@ html,body{margin:0;height:100%;background:#02030a;font-family:"Consolas",ui-mono
         </div>
         <div id="raillist"></div>
       </div>
+      <div id="kmeshbox" style="margin-top:9px;border-top:1px solid #1b2450;padding-top:7px">
+        <div style="font-size:9px;color:#6b7aa8;letter-spacing:.1em;margin-bottom:4px">KMESH · measured</div>
+        <div id="kmeshmeta" style="font-size:9px;color:#5f6ea0;line-height:1.45">waiting /api/burn</div>
+        <div id="kmeshitc"></div>
+      </div>
       <div class="rd"><span>THRU <b id="thru">0</b>/s</span><span>DEAD <b style="color:var(--red)" id="dl">0</b></span><span>Q <b id="q">2</b></span></div></div>
     <div class="panel" id="pKnobs" data-snd="mesh"><h3>Control knobs</h3><div class="knobs">
       <div class="knob" data-k="poll" data-min="60" data-max="480" data-v="120" data-suf="s"><svg viewBox="0 0 54 54" width="46"></svg><div class="k-val">2.0m</div><div class="k-lbl">POLL</div></div>
@@ -676,11 +681,11 @@ Object.keys(INFO).forEach(id=>{const p=document.getElementById(id);if(!p)return;
    source rule reads "rails.toml is THE registry. KDash renders it and never keeps its own list."
    This literal IS its own list. The feed (dash.json) has been correct the whole time; the panel
    was drawing from a constant nobody re-derived.
-   ⇒ OA added below so the panel is right TODAY. But the real fix is to paint this pane from
-     dash.json's kmesh.nodes, the way the meter rack already reads meters.json. Until that lands,
-     ANY node added to rails.toml is invisible here and nothing will say so — the same class as the
-     five stale status strings this session already found. (Owed: PLM item, next plumbing session.) */
+   ⇒ OA added below so the panel is right TODAY. The live fix is applyKmesh() from /api/burn
+     kmesh.nodes (rails.toml via bts_kmesh_cockpit). This literal is ART FALLBACK only.
+     Vertex is NOT a node — it is GEM's credit rail and must never appear here. */
 const NODES=[{id:"cowork",name:"COWORK",short:"CoW",sub:"verify·synth",cls:"n-orange",col:"#d97757"},{id:"sgh",name:"SGH",sub:"web·github",cls:"n-white",col:"#ffffff",emblem:1},{id:"gbw",name:"GBW",sub:"code·build",cls:"n-matrix",col:"#ffffff",matrix:1},{id:"gem",name:"GEM",sub:"search·research",cls:"n-gemini",col:"#8b7cff",gemini:1},{id:"copilot",name:"COPILOT",short:"CoP",sub:"office·docs",cls:"n-rainbow",col:"#5b7cff",grad:1},{id:"oa",name:"OA",sub:"1.05M ctx",cls:"n-oa",col:"#10a37f"}];
+const KMESH_ART={cow:{id:"cowork",name:"COWORK",short:"CoW",sub:"verify·synth",cls:"n-orange",col:"#d97757"},gw:{id:"gbw",name:"GBW",sub:"grok-build",cls:"n-matrix",col:"#ffffff",matrix:1},sgh:{id:"sgh",name:"SGH",sub:"grok-4.5",cls:"n-white",col:"#ffffff",emblem:1},gem:{id:"gem",name:"GEM",sub:"gemini",cls:"n-gemini",col:"#8b7cff",gemini:1},copg:{id:"copg",name:"COPG",short:"CoPG",sub:"cli·mcp",cls:"n-rainbow",col:"#5b7cff",grad:1},oa:{id:"oa",name:"OA",sub:"1.05M ctx",cls:"n-oa",col:"#10a37f"}};
 /* Matrix rain glyph set: binary + katakana + "alien" technical symbols. */
 const MXG="10ｱ01ｷ1⌇0ﾂ1⏃0ﾘ10ﾖ01⎔1ﾈ0⌬01ｻ10";
 function mxRain(cx,cy,r,cols,fs){
@@ -791,7 +796,7 @@ function nodeRow(n, reg){
   if (r && !r.ts && (status === "working" || status === "active")) status = "stale";
   const col = ST_COL[status] || "#5f6ea0";
   const ageTxt = (age==null) ? "" : (age<60 ? Math.round(age)+"m" : (age/60<24 ? (age/60).toFixed(1)+"h" : Math.round(age/1440)+"d"));
-  return '<div class="node" style="display:flex;align-items:center;gap:7px">'
+  let html = '<div class="node" style="display:flex;align-items:center;gap:7px">'
     + '<div class="rg" data-ring="'+n.id+'">'+ring(n)+'</div>'
     + '<div style="flex:1;min-width:0">'
     +   '<div class="nm '+n.cls+'">'+n.name+'</div>'
@@ -801,9 +806,24 @@ function nodeRow(n, reg){
     +   (ageTxt?'<span style="font-size:8px;color:#41506f;margin-left:4px">'+ageTxt+'</span>':'')
     +   '<div style="font-size:8.5px;color:#6b7aa8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="'+task+'">'+task+'</div>'
     + '</div></div>';
+  if(n.credit_rail){
+    const cr=n.credit_rail, av=cr.availability||cr.status||"UNKNOWN";
+    const ccol=av==="BLOCKED"?"#ff4d4d":(av==="UNKNOWN"||av==="UNMEASURED"||av==="RED")?"#ffb020":"#8fa0c8";
+    html += '<div style="margin:1px 0 5px 41px;font-size:8.5px;color:#6b7aa8">'
+      + '↳ <span style="color:#34a853">Vertex</span> credit rail · '
+      + '<span style="color:'+ccol+'">'+av+'</span>'
+      + (cr.expiry?(' · exp '+cr.expiry):'')
+      + ' · not a node</div>';
+  }
+  return html;
 }
+let _lastReg = null;
+function _nodeList(){ return window._kmeshPaintNodes || NODES; }
 function paintNodes(reg){
-  document.getElementById("nodes").innerHTML = NODES.map(n=>nodeRow(n, reg)).join("");
+  if(reg !== undefined) _lastReg = reg;
+  const box=document.getElementById("nodes"); if(!box) return;
+  box.innerHTML = _nodeList().map(n=>nodeRow(n, _lastReg)).join("")
+    + (window._kmeshObserverHtml || "");
 }
 paintNodes(null);
 /* ── THE REGISTRY, POLLED — and the bug that made this panel LIE ────────────────────────────────
@@ -887,8 +907,8 @@ function loadRegistry(){
     const firstLoad = (_lastSeq === -1);
     _lastSeq = seq;
     const nodes = j.nodes || {}, by = {};
-    NODES.forEach(n=>{                                     /* map each dashboard node to its ACTOR key */
-      const v = nodes[n.id.toUpperCase()];
+    _nodeList().forEach(n=>{                               /* map each painted node to its ACTOR key */
+      const v = nodes[n.id.toUpperCase()] || nodes[(n.short||"").toUpperCase()] || nodes[n.name];
       by[n.id] = v
         ? { status: v.status || "idle",
             topic: v.last_event ? (v.last_event + (v.last_detail ? " · " + v.last_detail : "")) : "—",
@@ -2095,11 +2115,10 @@ const METERS=[
     GREY "no data", which is the honest answer. Do not fill them in with estimates. */
  const POOLS=[
   {k:"sgh",    name:"SGH",     what:"grok-4.5 API · PAID · $/month",     col:"#ffffff", unit:"usd"},
-  {k:"gem",    name:"GEM",     what:"AI Studio · free tier · req/day",   col:"#4aa8ff", unit:"req"},
-  {k:"vertex", name:"VERTEX",  what:"$300 GCP credit · expires 2026-10-10", col:"#34a853", unit:"usd"},
+  {k:"gem",    name:"GEM",     what:"Gemini · Vertex is the $300 credit rail, not a node", col:"#8b7cff", unit:"usd"},
   {k:"claude", name:"CLAUDE",  what:"Cowork · no metered extra cost",    col:"#d97757", unit:null},
   {k:"copilot",name:"COPILOT", what:"M365 Family · 60 AI credits/mo",    col:"#5b7cff", unit:"req"},
-  {k:"gbw",    name:"GBW",     what:"browser Grok · free bulk lane",     col:"#9aa7bd", unit:null}];
+  {k:"gbw",    name:"GBW",     what:"Grok Build · SuperGrok subscription", col:"#9aa7bd", unit:null}];
  let P={};                                  // real numbers only; absent key = NO DATA
  /* Fed from the snapshot's burn block (bts_snapshot.py already emits REAL burn.sgh / burn.gem). */
  window._setBurn=function(b){if(!b)return;
@@ -2108,7 +2127,15 @@ const METERS=[
   if(b.gem&&typeof b.gem.used==="number"&&b.gem.cap){
    P.gem={used:b.gem.used,cap:b.gem.cap,txt:b.gem.used+" / "+b.gem.cap+" req"};
    /* If GEM is failing over, the "free tier" pool is NOT the thing being spent — say which rail. */
-   if(b.gem.via==="vertex")P.gem.note=b.gem.via_note||"AI Studio depleted — failing over to Vertex.";}
+   if(b.gem.via==="vertex")P.gem.note=b.gem.via_note||"AI Studio depleted — GEM is on its Vertex credit rail.";}
+  /* Vertex dollars nest under GEM. Never a sibling VERTEX pool. */
+  if(b.kmesh&&b.kmesh.meters&&b.kmesh.meters.gem_credit){
+   const g=b.kmesh.meters.gem_credit;
+   if(typeof g.used==="number"&&g.cap){
+    P.gem={used:g.used,cap:g.cap,
+           txt:"$"+Number(g.used).toFixed(2)+" / $"+Number(g.cap).toFixed(0)+" Vertex credit",
+           note:"Vertex is GEM's credit rail, not a node"+(g.estimate?" · estimate":"")};}
+  }
 
   /* ---- TELEMETRY "GEM rail" / "verify cost" — WIRED 2026-07-15. -------------------------------
      These two were HARDCODED LITERALS in the markup ("FREE · API", "$0.00") with NO code anywhere
@@ -2120,7 +2147,7 @@ const METERS=[
    const gr=document.getElementById("gemrail"), gc=document.getElementById("gcpcred");
    if(gr&&b.gem){
     const viaVertex = b.gem.via==="vertex";
-    gr.textContent = viaVertex ? "VERTEX · credit?" : "FREE · API";
+    gr.textContent = viaVertex ? "GEM · Vertex rail" : "FREE · API";
     gr.style.color = viaVertex ? "#ffb020" : "#8b7cff";
     gr.title = viaVertex
       ? (b.gem.via_note || "GEM is on Vertex, NOT the free tier.")
@@ -2505,7 +2532,7 @@ function burnRow(o){
   const head = paid
     ? '<b style="color:#e8734a">SGH</b> <span style="color:#5f6ea0">grok-4.5 · paid</span>'
     : onVertex
-      ? '<b style="color:#8b7cff">GEM</b> <span style="color:#ffb020">via VERTEX · credit</span>'
+      ? '<b style="color:#8b7cff">GEM</b> <span style="color:#ffb020">Vertex credit rail</span>'
       : '<b style="color:#8b7cff">GEM</b> <span style="color:#5f6ea0">flash · free</span>';
   const right = paid
     ? '<span style="color:#8fa0c8">'+fmtUsd(o.spent)+' / $'+Number(o.cap).toFixed(0)+'</span>'
@@ -2551,7 +2578,7 @@ function renderBurn(){
     const g = SNAP.burn.gem, gr = document.getElementById("gemrail"), gc = document.getElementById("gcpcred");
     if(g && gr && gc){
       const onVertex = (g.via === "vertex");
-      gr.textContent = onVertex ? "VERTEX · credit?" : "FREE · API";
+      gr.textContent = onVertex ? "GEM · Vertex rail" : "FREE · API";
       gr.style.color = onVertex ? "#ffb020" : "#8b7cff";
       gr.title = onVertex ? (g.via_note || "GEM is on Vertex, NOT the free tier.")
                           : "AI Studio free tier is serving GEM.";
@@ -2668,6 +2695,97 @@ function renderCredit(){
    NOTE ON PACKETS: mesh_state.json (polled 1 s, SEQ-GATED) is still the CHANNEL feed. Phone /
    board / lock / tmp are PEER FILES on the same /api/burn poll. _onBurnPackets stores them in
    _burnPackEvents; loadRegistry concats that list so renderSignals does not wipe the mesh log. */
+function applyKmesh(km){
+  if(!km) return;
+  window._kmesh = km;
+  const artOf = id => KMESH_ART[String(id||"").toLowerCase()] || null;
+  window._kmeshPaintNodes = (km.nodes||[])
+    .filter(n => String(n.id||"").toLowerCase()!=="vertex")
+    .map(n => {
+      const art = artOf(n.id) || {id:String(n.id||"").toLowerCase(), name:n.id,
+        sub:n.kind||"", cls:"n-cyan", col:"#8aa0ff"};
+      return Object.assign({}, art, {
+        name: n.id,
+        sub: n.model || n.family || art.sub,
+        credit_rail: n.credit_rail,
+        kmesh_status: n.status,
+        availability: n.availability
+      });
+    });
+  window._kmeshObserverHtml = (km.observers||[]).map(o =>
+    '<div style="font-size:8.5px;color:#5f6ea0;margin:3px 0 0 41px">observer · '
+    +(o.id||"")+' · '+(o.status||"OBSERVER")+'</div>').join("");
+  paintNodes(_lastReg);
+  const mn=document.getElementById("mNodes");
+  if(mn && km.counts) mn.textContent = km.counts.nodes;
+  const colOf = st => (st==="BLOCKED"||st==="RED")?"#ff4d4d"
+    :(st==="UNKNOWN"||st==="UNMEASURED"||st==="AMBER")?"#ffb020"
+    :(st==="GREEN")?"#3ddc84":"#8fa0c8";
+  const list=document.getElementById("raillist");
+  if(list && km.rails){
+    list.innerHTML="";
+    km.rails.forEach(r=>{
+      const st=r.status||r.availability||"UNKNOWN";
+      const col=colOf(st);
+      const label=r.latency_ms==null?"UNMEASURED"
+        :(r.latency_ms>=1000?(r.latency_ms/1000).toFixed(1)+" s":Math.round(r.latency_ms)+" ms");
+      const nest=r.not_a_node?" · GEM credit rail":"";
+      const d=document.createElement("div");
+      d.style.cssText="margin-bottom:5px";
+      d.title=(r.reason||r.what||"")+(r.as_of?(" · "+r.as_of):"");
+      d.innerHTML='<div style="display:flex;justify-content:space-between;font-size:10px">'
+        +'<span><b style="color:'+col+'">'+r.name+'</b> <span style="color:#5f6ea0">'
+        +(r.kind||"")+nest+'</span></span>'
+        +'<span style="color:'+col+'">'+label+' · '+st+'</span></div>';
+      list.appendChild(d);
+    });
+  }
+  const meta=document.getElementById("kmeshmeta");
+  if(meta){
+    const id=km.identity||{}, q=km.queue||{}, pk=km.packets||{};
+    const lock=(pk.lock||{}).state||"—";
+    const board=pk.board||{};
+    const open=(board.open && typeof board.open==="object")
+      ?("OPEN "+board.open.open+" / NEEDS_OWNER "+board.open.needs_owner):"unmeasured";
+    const fed=id.federation_ready===false
+      ?"family meshes independent · federation BLOCKED":(id.mesh_id||"KMesh");
+    meta.innerHTML='<div>'+(id.mesh_id||"KMesh")+' · '+(id.software||"BTS_MESH")
+      +' · registry ROLD/rails.toml</div>'
+      +'<div>measured '+(km.generated||"—")+' · lock '+lock+' · board '+open+'</div>'
+      +'<div>queue '+((q.live_root||{}).status||"UNKNOWN")+' — '
+      +((q.live_root||{}).reason||q.note||"")+'</div>'
+      +'<div>'+fed+'</div>';
+  }
+  const itcBox=document.getElementById("kmeshitc");
+  if(itcBox && km.itc){
+    const t=km.itc, gx=t.grokdex||{};
+    itcBox.innerHTML='<div style="margin-top:6px;font-size:9px;color:#6b7aa8;letter-spacing:.1em">ITC / R2</div>'
+      +'<div style="font-size:9px;color:#8fa0c8">publish <b style="color:#ffb020">'
+      +(t.publish_status||"UNKNOWN")+'</b> · keyed objects <b>'
+      +(t.keyed_object_count==null?"UNMEASURED":t.keyed_object_count)+'</b></div>'
+      +'<div style="font-size:8.5px;color:#5f6ea0">'+(t.keyed_object_count_reason||"")+'</div>'
+      +'<div style="font-size:9px;color:#8fa0c8">GrokDex <b style="color:#ffb020">'
+      +(gx.status||"UNMEASURED")+'</b> · ts '+(gx.timestamp||"—")
+      +' · count '+(gx.count==null?"—":gx.count)+'</div>'
+      +'<div style="font-size:8.5px;color:#5f6ea0">mismatch '
+      +((t.mismatch&&t.mismatch.status)||"UNKNOWN")+' · failure '
+      +(t.failure==null?"none recorded":t.failure)+'</div>';
+  }
+  const box=document.getElementById("surfcap");
+  if(box){
+    let extra=document.getElementById("kmeshsurfextra");
+    if(!extra){ extra=document.createElement("div"); extra.id="kmeshsurfextra"; extra.style.marginTop="6px"; box.appendChild(extra); }
+    const extras=(km.surfaces||[]).filter(s =>
+      s.source==="recorded"||s.source==="planned"||s.name==="GHX"||String(s.name||"").indexOf("G:")===0);
+    extra.innerHTML=extras.map(s=>{
+      const st=s.status||s.availability||"UNKNOWN";
+      const col=st==="RED"||st==="BLOCKED"?"#ff4d4d":st==="GREEN"?"#3ddc84":"#ffb020";
+      const path=s.configured_path?(' · <span style="color:#41506f">'+s.configured_path+'</span>'):"";
+      return '<div style="margin:3px 0;font-size:9px"><b style="color:'+col+'">'+s.name+'</b> '
+        +'<span style="color:#5f6ea0">'+st+'</span>'+path+'</div>';
+    }).join("");
+  }
+}
 let _burnLive = false;
 let _burnPktSig = null, _burnPktWatermark = -1;
 function _onBurnPackets(p){
@@ -2716,11 +2834,13 @@ async function pollBurn(){
   }
   await loadSnap();                       /* still needed: surfaces, credit, policy, bench */
   if (live && live.packets) _onBurnPackets(live.packets);
+  if (live && live.kmesh) applyKmesh(live.kmesh);
   if (live && (live.gem || live.sgh)) {
     if (!SNAP) SNAP = {};
     SNAP.burn = live;                     /* LIVE burn wins over the frozen snapshot */
     SNAP.ts = live.ts || SNAP.ts;
     _burnLive = true;
+    if(typeof window._setBurn==="function") window._setBurn(live);
   } else {
     _burnLive = false;
   }

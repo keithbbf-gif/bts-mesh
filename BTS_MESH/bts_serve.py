@@ -5,6 +5,7 @@ WHY
   The dashboard needs three things a static file server cannot give it:
     /api/burn   live burn-rate for GEM (requests+tokens, free) and SGH (dollars+tokens, paid)
                 plus packets{} — stat of the phone pair, board.json, tree_lock, tmp/temp_files.toml
+                plus kmesh{} — measured cockpit from rails.toml (Vertex nested under GEM)
     /api/bench  run the real mesh <TEST> — the API rails that CORS blocks the browser from timing
     /api/state  cheap heartbeat
   Everything else is served exactly as before (same port, same in-pane YouTube fix — a file://
@@ -200,6 +201,19 @@ def burn(packet_paths=None):
     }
     # Peer-file packets: phone / board / lock / tmp. Stat only — not a rail probe.
     out["packets"] = packets(packet_paths)
+    # Full measured cockpit from rails.toml. In-memory only — never writes dash.json.
+    try:
+        import bts_kmesh_cockpit
+        out["kmesh"] = bts_kmesh_cockpit.build(packets=out["packets"])
+    except Exception as e:
+        out["kmesh"] = {
+            "ok": False,
+            "status": "UNKNOWN",
+            "reason": "%s: %s" % (type(e).__name__, str(e)[:200]),
+            "vertex_node_drawn": False,
+            "nodes": [],
+            "rails": [],
+        }
     return out
 
 
@@ -386,6 +400,10 @@ def _selftest():
         b = burn(empty)
         check("burn carries five leaves", "phone_out" in (b.get("packets") or {}))
         check("burn still has gem+sgh", "gem" in b and "sgh" in b)
+        check("burn carries kmesh", isinstance(b.get("kmesh"), dict))
+        km = b.get("kmesh") or {}
+        check("kmesh has no Vertex node",
+              "vertex" not in {str(n.get("id") or "").lower() for n in (km.get("nodes") or [])})
         check("no rail_check in this module", "rail_check" not in sys.modules)
     finally:
         shutil.rmtree(d, ignore_errors=True)
@@ -410,7 +428,7 @@ if __name__ == "__main__":
         raise SystemExit(3)
     srv = ThreadingHTTPServer(("127.0.0.1", PORT), H)   # localhost ONLY — this process can spend
     print("BTS dashboard server -> http://127.0.0.1:%d/jack_command.html" % PORT)
-    print("  /api/burn      live GEM + SGH burn rate + peer packets (phone/board/lock/tmp)")
+    print("  /api/burn      live GEM + SGH burn + peer packets + measured KMesh cockpit")
     print("  /api/bench     real mesh <TEST> (add ?free=1 to spend nothing)")
     print("  /api/surfaces  ITC / GDX / ODX / local capacity")
     print("  /api/policy    SPEED<->COST dial (?bias=0..100)")
