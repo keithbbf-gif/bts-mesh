@@ -73,8 +73,18 @@ def _leaf(lid, path):
     return out
 
 
+def _item_status(item):
+    if not isinstance(item, dict):
+        return ""
+    return str(item.get("status") or "").upper().replace("-", "_")
+
+
 def _board_meta(path):
-    """seq + open (OPEN|NEEDS_OWNER). Torn/unreadable → null, null — not 0, 0."""
+    """seq + open counts from items[]. Torn/unreadable → null, null.
+
+    Live board.json is {seq, items}. There is no top-level "open" string.
+    open is derived: {open, needs_owner} = counts of item status OPEN / NEEDS_OWNER.
+    """
     try:
         with open(path, encoding="utf-8") as f:
             data = json.load(f)
@@ -85,10 +95,17 @@ def _board_meta(path):
     seq = data.get("seq")
     if not isinstance(seq, int):
         seq = None
-    raw = data.get("open")
-    if isinstance(raw, str) and raw.upper().replace("-", "_") in ("OPEN", "NEEDS_OWNER"):
-        return seq, raw.upper().replace("-", "_")
-    return seq, None
+    items = data.get("items")
+    if not isinstance(items, list):
+        return seq, None
+    n_open = n_need = 0
+    for it in items:
+        st = _item_status(it)
+        if st == "OPEN":
+            n_open += 1
+        elif st == "NEEDS_OWNER":
+            n_need += 1
+    return seq, {"open": n_open, "needs_owner": n_need}
 
 
 def packets(paths=None):
@@ -329,7 +346,10 @@ def _selftest():
         with open(empty["phone_in"], "w", encoding="utf-8") as f:
             f.write("# in\n")
         with open(empty["board"], "w", encoding="utf-8") as f:
-            json.dump({"seq": 7, "open": "NEEDS_OWNER"}, f)
+            json.dump({"seq": 7, "items": [
+                {"status": "OPEN"}, {"status": "OPEN"},
+                {"status": "NEEDS_OWNER"}, {"status": "DONE"},
+            ]}, f)
         os.makedirs(os.path.dirname(empty["tmp"]), exist_ok=True)
         with open(empty["tmp"], "w", encoding="utf-8") as f:
             f.write("x=1\n")
@@ -341,7 +361,8 @@ def _selftest():
               p1["phone_out"]["present"] and p1["phone_out"]["size"] > 0
               and p1["phone_in"]["present"])
         check("board.seq", p1["board"]["seq"] == 7)
-        check("board.open NEEDS_OWNER", p1["board"]["open"] == "NEEDS_OWNER")
+        check("board.open from items",
+              p1["board"]["open"] == {"open": 2, "needs_owner": 1})
         check("lock HELD no holder", p1["lock"]["state"] == "HELD" and "holder" not in p1["lock"])
         check("tmp present", p1["tmp"]["present"] and p1["tmp"]["size"] > 0)
 

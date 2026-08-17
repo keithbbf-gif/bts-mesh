@@ -2675,7 +2675,9 @@ function _onBurnPackets(p){
   const keys = ["phone_out","phone_in","board","lock","tmp"];
   const sig = keys.map(k=>{
     const x = p[k] || {};
-    return [k, x.mtime||0, x.size||0, x.state||"", x.seq||"", x.open||""].join(":");
+    const openSig = (x.open && typeof x.open === "object")
+      ? ((x.open.open||0)+":"+(x.open.needs_owner||0)) : (x.open||"");
+    return [k, x.mtime||0, x.size||0, x.state||"", x.seq||"", openSig].join(":");
   }).join("|");
   if (sig === _burnPktSig) return;
   const first = (_burnPktSig === null);
@@ -2687,7 +2689,13 @@ function _onBurnPackets(p){
   };
   if (p.phone_out && p.phone_out.present) add("PHONE", "phone_out "+(p.phone_out.size||0)+" B");
   if (p.phone_in && p.phone_in.present) add("PHONE", "phone_in "+(p.phone_in.size||0)+" B");
-  if (p.board && p.board.present) add("BOARD", "seq="+(p.board.seq)+" open="+(p.board.open));
+  if (p.board && p.board.present) {
+    const o = p.board.open;
+    const od = (o && typeof o === "object")
+      ? ("OPEN "+(o.open||0)+" NEEDS_OWNER "+(o.needs_owner||0))
+      : ("open="+o);
+    add("BOARD", "seq="+p.board.seq+" "+od);
+  }
   if (p.lock) add("LOCK", p.lock.state || "FREE");
   if (p.tmp && p.tmp.present) add("TMP", (p.tmp.size||0)+" B");
   _burnPackEvents = ev;

@@ -31,7 +31,10 @@ try:
     print("== present peers ==")
     open(paths["phone_out"], "w", encoding="utf-8").write("# out\n")
     open(paths["phone_in"], "w", encoding="utf-8").write("# in\n")
-    json.dump({"seq": 7, "open": "OPEN"}, open(paths["board"], "w", encoding="utf-8"))
+    json.dump({"seq": 7, "items": [
+        {"status": "OPEN"}, {"status": "OPEN"},
+        {"status": "NEEDS_OWNER"}, {"status": "DONE"},
+    ]}, open(paths["board"], "w", encoding="utf-8"))
     os.makedirs(os.path.dirname(paths["tmp"]), exist_ok=True)
     open(paths["tmp"], "w", encoding="utf-8").write("x=1\n")
     open(paths["lock"], "w", encoding="utf-8").write("held\n")
@@ -39,9 +42,23 @@ try:
     p1 = S.packets(paths)
     check("phone mtime/size", p1["phone_out"]["present"] and p1["phone_out"]["size"] > 0)
     check("board.seq", p1["board"]["seq"] == 7)
-    check("board.open OPEN", p1["board"]["open"] == "OPEN")
+    check("board.open from items",
+          p1["board"]["open"] == {"open": 2, "needs_owner": 1})
     check("lock HELD", p1["lock"]["state"] == "HELD" and "holder" not in p1["lock"])
     check("tmp present", p1["tmp"]["present"])
+
+    print("== tonight-shaped board (seq + items, no top-level open) ==")
+    items = ([{"status": "OPEN"}] * 18
+             + [{"status": "NEEDS_OWNER"}] * 2
+             + [{"status": "DONE"}] * 7)
+    json.dump({"seq": 27, "items": items}, open(paths["board"], "w", encoding="utf-8"))
+    p27 = S.packets(paths)
+    check("seq 27", p27["board"]["seq"] == 27)
+    check("OPEN 18 + NEEDS_OWNER 2",
+          p27["board"]["open"] == {"open": 18, "needs_owner": 2})
+    json.dump({"seq": 1, "open": "OPEN"}, open(paths["board"], "w", encoding="utf-8"))
+    planted = S.packets(paths)
+    check("top-level open string is not the floor", planted["board"]["open"] is None)
 
     print("== torn board ==")
     open(paths["board"], "w", encoding="utf-8").write("{{{")
