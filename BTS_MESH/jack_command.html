@@ -680,7 +680,7 @@ Object.keys(INFO).forEach(id=>{const p=document.getElementById(id);if(!p)return;
      dash.json's kmesh.nodes, the way the meter rack already reads meters.json. Until that lands,
      ANY node added to rails.toml is invisible here and nothing will say so — the same class as the
      five stale status strings this session already found. (Owed: PLM item, next plumbing session.) */
-const NODES=[{id:"cowork",name:"COWORK",short:"CoW",sub:"verify·synth",cls:"n-orange",col:"#d97757"},{id:"sgh",name:"SGH",sub:"web·github",cls:"n-white",col:"#ffffff",emblem:1},{id:"gbw",name:"GBW",sub:"code·build",cls:"n-matrix",col:"#ffffff",matrix:1},{id:"gem",name:"GEM",sub:"search·research",cls:"n-gemini",col:"#8b7cff",gemini:1},{id:"copilot",name:"COPILOT",short:"CoP",sub:"office·docs",cls:"n-rainbow",col:"#5b7cff",grad:1},{id:"oa",name:"OA",sub:"1.05M ctx",cls:"n-oa",col:"#10a37f"}];
+const NODES=[{id:"cowork",name:"COWORK",short:"CoW",sub:"verify·synth",cls:"n-orange",col:"#d97757"},{id:"sgh",name:"SGH",sub:"web·github",cls:"n-white",col:"#ffffff",emblem:1},{id:"gbw",name:"GBW",short:"GW",sub:"code·build",cls:"n-matrix",col:"#ffffff",matrix:1},{id:"gem",name:"GEM",sub:"search·research",cls:"n-gemini",col:"#8b7cff",gemini:1},{id:"copilot",name:"COPILOT",short:"CoP",sub:"office·docs",cls:"n-rainbow",col:"#5b7cff",grad:1},{id:"oa",name:"OA",sub:"1.05M ctx",cls:"n-oa",col:"#10a37f"}];
 /* Matrix rain glyph set: binary + katakana + "alien" technical symbols. */
 const MXG="10ｱ01ｷ1⌇0ﾂ1⏃0ﾘ10ﾖ01⎔1ﾈ0⌬01ｻ10";
 function mxRain(cx,cy,r,cols,fs){
@@ -1380,8 +1380,9 @@ const NODE_XY={
   cowork :{x:240,y:30},   // top, beside COP — the chat rail is a short horizontal, not a diagonal
   copilot:{x:400,y:30},   // MICROSOFT, beside COWORK (chat rail) AND beside ODX (its vendor)
   sgh    :{x:150,y:120},  // xAI pair, left column
-  gbw    :{x:150,y:200},  //   "   , directly under SGH
-  gem    :{x:490,y:120}   // GOOGLE pair, right column — GDX sits directly under it
+  gbw    :{x:150,y:200},  //   GW (Grok Build), directly under SGH
+  gem    :{x:490,y:120},  // GOOGLE pair, right column — GDX sits directly under it
+  oa     :{x:400,y:120}   // OA is a peer, not parked on the hub. Vertex is GEM's rail, not a peer.
 };
 /* VERTICAL STRETCH ×1.5 — Keith 2026-07-14: "Stretch the SIGNAL CORE MESH DIAGRAM VERTICALLY BY 1.5×."
    Scale every ABSOLUTE y (node centres, hub, surfaces) ×1.5 about the map centre (125 → 187.5) and grow
@@ -1396,7 +1397,7 @@ Object.keys(NODE_XY).forEach(k=>NODE_XY[k].y=_ty(NODE_XY[k].y));
    redraw, so nothing is hardcoded to a coordinate — drag a node and its channels, surface links,
    arrowheads, hub spokes and labels all follow. `_LAYOUT_KEY` is versioned: bump it if the default
    seats change, or a saved layout will silently pin nodes to the old map. */
-const _LAYOUT_KEY="kdash_core_layout_v1";
+const _LAYOUT_KEY="kdash_core_layout_v2";
 /* `_hub` is the ROLD hub (C). It is stored alongside the nodes/surfaces under a reserved id so the
    whole layout — including the hub — round-trips through one localStorage blob. */
 function _loadLayout(){
@@ -1512,7 +1513,7 @@ Object.keys(LINKS).forEach(k=>{
 });
 const CHAT_RAIL=["cowork","copilot"];  // upload-injection: COWORK attaches, COPILOT reads
 
-/* ══ CHANNELS — ADDED 2026-07-16 ═══════════════════════════════════════════════════════════════════
+/* ══ CHANNELS — ADDED 2026-07-16, TOPOLOGY CORRECTED 2026-08-17 ════════════════════════════════════
    Keith: "Make sure each channel (API, DOM, R2, etc) has it's own channel lines and metrics in the
    appropriate widgets."
 
@@ -1526,21 +1527,46 @@ const CHAT_RAIL=["cowork","copilot"];  // upload-injection: COWORK attaches, COP
    on API"), and a single line hides it. So each channel gets its OWN line, its own dash, its own
    latency, and its own $/call.
 
+   ── TOPOLOGY, 2026-08-17. The first draft of this array was a STAR: every edge had a:"cowork".
+   That drew CoW as the bus. It is not. Nodes talk to each other and to surfaces DIRECTLY.
+   CoW is the KEEPER (verify, synthesize, hold keys) — a peer, not the hop every payload takes.
+   SGH→GDX is written by Grok's own connector and never passes through Cowork. The comments
+   already said so (INTERNODES / CHANNEL MAP / paintRails). The draw must match the comment.
+
+   Peers present in THIS file: CoW, GW (id gbw), SGH, GEM, CoP, OA.
+   Not invented: CoPG, GbQA — those ids are not objects here.
+   Vertex is GEM's rail (RAILS[].what), not a peer node.
+   phone / board / lock / tmp are not objects in this file, so they are not drawn.
+   Lock absent = FREE, not a missing node.
+
    PARALLEL OFFSET: two channels between the same pair are drawn as two lines offset perpendicular to
    the pair axis (`off` px), so both stay readable however the nodes are dragged.
    `proven`: false => dashed + dim. An UNPROVEN channel must never look like a measured one — the same
    rule as the grey "no data" meters. */
 const CHANNELS=[
+  /* keeper talks to peers — these stay, but they are not the only edges */
   {id:"api_sgh", a:"cowork", b:"sgh",     kind:"API", col:"#ff9d5c", off:+5, proven:true,
    tip:"API - xAI grok-4.5. PAID, and EXACT: xAI returns cost_in_usd_ticks per call (reconciled 2026-07-16 at 0.99x against console.x.ai). ~$0.0004/plain call. Grounded search is REFUSED in code (needs spend_ok=<usd>) - two grounded calls once cost $2.93."},
   {id:"dom_sgh", a:"cowork", b:"sgh",     kind:"DOM", col:"#4dff9e", off:-5, proven:true,
    tip:"DOM - grok.com in Keith's own Chrome. FREE. Same model, same reasoning, $0.00 per token. Slower per round trip (~2.1s vs 1.3s) but the tokens cost NOTHING. This is the lane for reasoning-heavy and bulk work; the API is the fallback, not the default."},
   {id:"api_gem", a:"cowork", b:"gem",     kind:"API", col:"#ff9d5c", off:0,  proven:true,
-   tip:"API - Gemini via Vertex/Agent Platform on the $300 credit. ⚠ BILLS THINKING AT THE OUTPUT RATE: measured in=18 out=101 thinking=2883 => ratio 28.5x, $0.0299 for a 3-sentence answer. Capped at $0.01/task + thinkingBudget. The AI Studio free tier is DEAD (429 prepay)."},
+   tip:"API - Gemini via Vertex/Agent Platform on the $300 credit. Vertex is GEM's rail, not a peer node. ⚠ BILLS THINKING AT THE OUTPUT RATE: measured in=18 out=101 thinking=2883 => ratio 28.5x, $0.0299 for a 3-sentence answer. Capped at $0.01/task + thinkingBudget. The AI Studio free tier is DEAD (429 prepay)."},
   {id:"chat_cop", a:"cowork", b:"copilot", kind:"CHAT", off:0, col:"#8b6cff", proven:true,
    tip:"CHAT - upload-injection: COWORK attaches a file, COPILOT reads it. Copilot's ONLY rail: its OneDrive connector is METADATA-ONLY (cannot read file CONTENT in any format)."},
   {id:"dom_gbw", a:"cowork", b:"gbw",     kind:"DOM", col:"#4dff9e", off:0, proven:true,
-   tip:"DOM - Grok Build in the browser. FREE. Same bridge as SGH-DOM. ⚠ SGH and GBW are BOTH Grok - they are NOT independent checks of each other."}
+   tip:"DOM - Grok Build (GW) in the browser. FREE. Same bridge as SGH-DOM. ⚠ SGH and GW are BOTH Grok - they are NOT independent checks of each other."},
+  {id:"api_oa",  a:"cowork", b:"oa",      kind:"API", col:"#10a37f", off:0, proven:true,
+   tip:"API - OA gpt-5.6-terra. PAID, EXACT: every call carries tok_in/tok_out. 1.05M context. CoW is keeper; OA is a peer, not a spoke."},
+  /* peers talk to each other — CoW is not on these edges */
+  {id:"sgh_gw",  a:"sgh",    b:"gbw",     kind:"—",   col:"#ff6b6b", off:0, proven:false,
+   tip:"BOTH ARE GROK. Not an independent check of each other. Drawn so the map does not pretend they are two families."},
+  /* peers talk to surfaces directly — SGH→GDX never passes through Cowork */
+  {id:"sgh_gdx", a:"sgh",    b:"gdx",     kind:"WRITE", col:"#3ddc84", off:+5, proven:true,
+   tip:"SGH AUTHORS FILES TO GDX. Grok's own connector. It never passes through Cowork. Verify by LISTING THE FOLDER, never by filename, never by its DONE."},
+  {id:"gem_gdx", a:"gem",    b:"gdx",     kind:"READ",  col:"#8b7cff", off:-5, proven:true,
+   tip:"Gemini-in-Drive reads GDX natively over the DOM. FREE. Cannot create files — but Export to Docs lands a real Doc. SGH writes → GEM reads. Cowork's context is never the transport."},
+  {id:"gw_gdx",  a:"gbw",    b:"gdx",     kind:"R/W",   col:"#9177C7", off:0, proven:true,
+   tip:"GW (Grok Build) reads and writes GDX the same way SGH does — a node↔surface rail, not a hop through CoW."}
 ];
 /* Surface channels: which wire a surface edge actually rides. Set on the LINKS entry (chan:) or
    defaulted here. R2 = the rclone publish (Cowork-only, holds the keys). DRIVE = Google Drive
@@ -1593,9 +1619,17 @@ function drvIcon(s){const x=s.x,y=s.y,c=s.col,st=s.grad?'url(#'+s.grad+')':c;let
    "Identifier '_esc' has already been declared", which killed the whole script and rendered NOTHING.
    Grep before you declare. _escA adds the quote-escaping _esc does not do, for attribute context. */
 const _escA=s=>_esc(s).replace(/"/g,"&quot;");
+/* Resolve a CHANNELS endpoint: a node in `pos` OR a surface in SURF.
+   The star bug hid SGH→GDX because chanLines only looked at nodes, so a:"sgh" b:"gdx"
+   would have drawn nothing even after the edge was added. */
+function chanEnd(id){
+  const n=pos.find(p=>p.id===id); if(n) return n;
+  const s=SURF.find(z=>z.id===id); if(s) return s;
+  return null;
+}
 function chanLines(){
   return CHANNELS.map(ch=>{
-    const a=pos.find(p=>p.id===ch.a), b=pos.find(p=>p.id===ch.b);
+    const a=chanEnd(ch.a), b=chanEnd(ch.b);
     if(!a||!b) return "";
     const dx=b.x-a.x, dy=b.y-a.y, len=Math.hypot(dx,dy)||1;
     const ox=-dy/len*(ch.off||0), oy=dx/len*(ch.off||0);      // perpendicular offset
@@ -1690,7 +1724,7 @@ core.innerHTML='<defs><linearGradient id="cpCoreGrad" x1="0" y1="0" x2="1" y2="1
   const short=p.short||p.name;
   const lbl=p.matrix
      /* GBW label rides ON TOP of the rain, so it needs a dark plate to stay legible. */
-     ?'<rect x="'+(p.x-13)+'" y="'+(p.y-6)+'" width="26" height="12" rx="2" fill="#000" opacity=".72"/><text x="'+p.x+'" y="'+(p.y+3.4)+'" fill="#fff" font-size="9" text-anchor="middle" font-weight="800" font-family="ui-monospace,monospace" style="filter:drop-shadow(0 0 4px #fff)">'+p.name+'</text>'
+     ?'<rect x="'+(p.x-13)+'" y="'+(p.y-6)+'" width="26" height="12" rx="2" fill="#000" opacity=".72"/><text x="'+p.x+'" y="'+(p.y+3.4)+'" fill="#fff" font-size="9" text-anchor="middle" font-weight="800" font-family="ui-monospace,monospace" style="filter:drop-shadow(0 0 4px #fff)">'+(p.short||p.name)+'</text>'
      :art
       ? '<g transform="translate('+(p.x-17*1.12).toFixed(2)+' '+(p.y-17*1.12).toFixed(2)+') scale(1.12)">'+art+'</g>'
         +'<text x="'+p.x+'" y="'+(p.y+27)+'" fill="'+(p.gemini?'url(#gemGradC)':p.col)+'" font-size="8" text-anchor="middle" font-weight="800">'+short+'</text>'
@@ -2424,7 +2458,8 @@ if(location.protocol==="file:"){var _np=document.getElementById("np");if(_np)_np
   SGH:"SGH (Grok) — web + GitHub research. Writes direct to GDX (proven 2026-07-12). Content-verify its DONEs (fake-DONE class).",
   GBW:"GBW (Grok Build) — code, build, refactor, tooling. Shipped bts_gdx.py, the PyDrive2 GDX rail. WARNING: it regresses old fixes while making new ones — re-verify EVERY fix pass, not just the new one.",
   GEM:"GEM (Gemini) — fast search / research / DOI + citation lookup. LIVE. Calibration PASSED: returned the chambers2008 DOI from withheld ground truth without fabricating. Reads GDX natively. Use gemini.google.com/u/1/app (keith.bbf) — /app is the WRONG account (dchamberss). Keep messages SHORT: long prompts make Gemini error out.",
-  COPILOT:"COPILOT (Microsoft) — Office / document work. LIVE via ODX. Its OneDrive connector is METADATA-ONLY: it can see filenames but cannot read file contents (md, txt AND docx all fail — not a format issue; Graph grounding is licence-gated). It CAN read files ATTACHED in chat, and Cowork drives that upload itself. Proven: quoted a withheld passphrase from an attached docx."
+  COPILOT:"COPILOT (Microsoft) — Office / document work. LIVE via ODX. Its OneDrive connector is METADATA-ONLY: it can see filenames but cannot read file contents (md, txt AND docx all fail — not a format issue; Graph grounding is licence-gated). It CAN read files ATTACHED in chat, and Cowork drives that upload itself. Proven: quoted a withheld passphrase from an attached docx.",
+  OA:"OA (OpenAI) — 1.05M-context peer. CoW is keeper, not the bus. Two lanes: openai-api (metered terra) and openai-codex (prepaid). Vertex is GEM's rail, not a peer here."
  };
  document.querySelectorAll("#nodes .node").forEach(n=>{const nm=n.querySelector(".nm");if(nm&&NT[nm.textContent.trim()])T(n,NT[nm.textContent.trim()])});
  par("phi","Work function φ (eV) of the current element.");par("seco","Secondary-electron cutoff (eV) = hν − φ.");
@@ -2776,28 +2811,36 @@ const CHAN=[
   /* a, b, rail, how it is carried, measured? (filled from bench.internodes when present)
      `off` bows the edge so the TWO parallel COWORK↔SGH rails (DOM and API) do not sit on top of
      each other — they are genuinely different channels with different costs, and the map lied by
-     drawing only one. (2026-07-13) */
+     drawing only one. (2026-07-13)
+     2026-08-17: this overlay MUST NOT restar the map through CoW. Topology lives in CHANNELS.
+     paintChannels skips a pair CHANNELS already draws, so we do not double the line. */
   {a:"cowork", b:"sgh",     rail:"DOM",   how:"Chrome bridge. AUTONOMOUS — click the Submit button. FREE.", key:"cowork↔sgh·dom", off: 16},
   {a:"cowork", b:"sgh",     rail:"API",   how:"grok-4.5 API. Costs money. Ungrounded only.",     key:"cowork↔sgh",     off:-16},
   {a:"cowork", b:"gbw",     rail:"DOM",   how:"Chrome bridge",                                   key:"cowork↔gbw",     off:-40},
   {a:"cowork", b:"gem",     rail:"API",   how:"Gemini API (free tier dead → Vertex credit)",     key:"cowork↔gem",     off: 14},
   {a:"cowork", b:"copilot", rail:"CHAT",  how:"upload-injection: COWORK attaches, COPILOT reads", key:"cowork↔copilot", off: 14},
+  {a:"cowork", b:"oa",      rail:"API",   how:"OA gpt-5.6-terra. CoW is keeper; OA is a peer.",  key:"cowork↔oa",      off: 14},
   {a:"sgh",    b:"gbw",     rail:"—",     how:"BOTH ARE GROK. Not an independent check of each other.", key:null, warn:1, off: 14},
-  /* ── THE NODE↔NODE RAILS, PROVEN 2026-07-14. These are the ones that keep COWORK out of the middle. ──
+  /* ── THE NODE↔SURFACE RAILS, PROVEN 2026-07-14. These are the ones that keep COWORK out of the middle. ──
      SGH WRITES to GDX (it authors files on command — "it can't" was false and cost a week of design).
      GEM READS GDX natively over the DOM (drive.google.com/drive/ai), free, and exports answers to a Doc.
      ⇒ SGH writes → GEM reads → Export to Docs → Cowork reads the artifact. Cowork's context is never the
-     transport. THAT is what this map is for. */
+     transport. THAT is what this map is for. Drawn from CHANNELS; listed here so internodes stay honest. */
   {a:"sgh",    b:"gdx",     rail:"WRITE", how:"SGH AUTHORS FILES TO GDX. Bare 'write X to Y', folder by ID, verify by LISTING THE FOLDER — never by filename, never by its DONE.", key:"sgh↔gdx", off: 16},
-  {a:"gem",    b:"gdx",     rail:"READ",  how:"Gemini-in-Drive (drive.google.com/drive/ai) reads GDX natively over the DOM. FREE. Cannot create files — but 'Export to Docs' lands a real Doc that Cowork reads.", key:"gem↔gdx", off:-16}
+  {a:"gem",    b:"gdx",     rail:"READ",  how:"Gemini-in-Drive (drive.google.com/drive/ai) reads GDX natively over the DOM. FREE. Cannot create files — but 'Export to Docs' lands a real Doc that Cowork reads.", key:"gem↔gdx", off:-16},
+  {a:"gbw",    b:"gdx",     rail:"R/W",   how:"GW reads and writes GDX directly. Not a hop through CoW.", key:"gbw↔gdx", off: 10}
 ];
+function chanCovered(a,b){
+  return CHANNELS.some(ch => (ch.a===a && ch.b===b) || (ch.a===b && ch.b===a));
+}
 function paintChannels(IN){
   const svg=document.getElementById("core"); if(!svg) return;
   const old=document.getElementById("chanlayer"); if(old) old.remove();
   const idx={}; (IN||[]).forEach(e=>{ idx[(e.a+"↔"+e.b).toLowerCase()]=e; idx[(e.b+"↔"+e.a).toLowerCase()]=e; });
   let g='<g id="chanlayer" style="pointer-events:none">';
   CHAN.forEach(c=>{
-    const A=NODE_XY[c.a], B=NODE_XY[c.b]; if(!A||!B) return;
+    if(chanCovered(c.a,c.b)) return;   /* CHANNELS already drew this pair — do not restar or double */
+    const A=chanEnd(c.a), B=chanEnd(c.b); if(!A||!B) return;
     const m=c.key?idx[c.key.toLowerCase()]:null;
     const known=m && m.ms!=null;
     const col=c.warn?"#ff6b6b":(known?(m.col||"#22e3ff"):"#3a4a80");
@@ -2899,15 +2942,17 @@ function paintRails(d){
       +    '<span>parallel '+Math.round(b.parallel_ms)+' ms</span></div></div>';
   }
   /* ── INTERNODES — the EDGES, not the endpoints ────────────────────────────────────────
-     Keith: "measure the speeds AROUND the network." A mesh is its links. Every edge is timed
-     FROM COWORK (the hub), because that is where artifacts actually get handed off.
+     Keith: "measure the speeds AROUND the network." A mesh is its links.
+     CoW is the KEEPER, not the hub and not the bus. Edges that can be timed from this
+     machine are timed here; that does not make CoW the hop. SGH→GDX never passes through
+     Cowork — Grok's own connector writes it — and CHANNELS draws that edge directly.
 
-     ONE HONEST CAVEAT, shown in the tooltip: the GDX edge is a LOCAL write into the
-     Drive-for-Desktop folder. Google syncs ASYNC — the file is on disk in milliseconds, but
-     SGH/GBW cannot SEE it until Drive pushes it (seconds to minutes). So it is handoff cost,
+     ONE HONEST CAVEAT, shown in the tooltip: the GDX edge timed from here is a LOCAL write
+     into the Drive-for-Desktop folder. Google syncs ASYNC — the file is on disk in milliseconds,
+     but SGH/GW cannot SEE it until Drive pushes it (seconds to minutes). So it is handoff cost,
      NOT far-agent visibility. Calling a 5 ms local write "the SGH↔GDX rail" would be a lie.
-     And SGH↔GDX itself is written by Grok's OWN connector — it never passes through Cowork,
-     so it is shown as "not measurable from here" rather than invented. */
+     SGH↔GDX itself is not measurable from Cowork, so it is shown as "not measurable from here"
+     rather than invented. */
   paintInternodes(d.internodes);          /* -> TELEMETRY panel, not here (Keith, 2026-07-12) */
 
   /* a test that spends money should say how much */
@@ -2948,14 +2993,10 @@ async function meshTest(btn){
 /* ── ONE CLICK = FULLY LOADED ────────────────────────────────────────────────────────────
    Keith: "The Dash should never require more than one click to fully load/execute."
 
-   So on load we paint everything from dash.json, and if the rail measurement is STALE we
-   re-run it automatically — the user should not have to press <TEST> to see a populated board.
-
-   But an auto-probe on every page load would spend money on every refresh (the SGH edge is a
-   paid call), so it is GATED ON AGE: only re-probe if the last one is older than AUTO_TEST_MAX_AGE.
-   Fresh snapshot -> paint it, spend nothing. Stale -> one probe, ~$0.0004, booked as POLL so it
-   can never eat into real work. That is one click AND no spend loop. */
-const AUTO_TEST_MAX_AGE = 15 * 60;         /* seconds. Re-probe only if the rails are older than this. */
+   On load we paint everything from the existing dash.json snapshot. <TEST> is the only
+   writer. A timer or auto-probe must NOT rewrite dash.json — that was a spend loop waiting
+   to happen (the SGH edge is a paid call) and it turned a snapshot into a live feed.
+   Fresh or stale, the file on disk is what the board shows. Press <TEST> to refresh it. */
 
 (function(){
   const b=document.getElementById("railtest");
@@ -2963,13 +3004,6 @@ const AUTO_TEST_MAX_AGE = 15 * 60;         /* seconds. Re-probe only if the rail
 
   loadSnap().then(()=>{
     renderRails(); renderBurn(); pollSurfaces();
-    if(API===null) return;
-    const bench = SNAP && SNAP.bench;
-    const age = bench && bench.ts ? (Date.now()/1000 - bench.ts) : Infinity;
-    if(age > AUTO_TEST_MAX_AGE && b){
-      /* stale (or never run) -> populate it for them, exactly once, on open */
-      meshTest(b);
-    }
   });
 })();
 
