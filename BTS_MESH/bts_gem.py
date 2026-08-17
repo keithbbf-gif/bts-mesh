@@ -257,16 +257,6 @@ def ask_aistudio(prompt: str, priority: str = "WORK", grounded: bool = False, re
     return {"ok": False, "reason": "TIMEOUT", "text": None, "budget": budget()}
 
 
-if __name__ == "__main__":
-    import sys
-    b = budget()
-    print("GEM budget %s: used %d/%d | POLL %d/%d" %
-          (b["date"], b["used"], MAX_RPD, b["poll_used"], b["poll_cap"]))
-    if len(sys.argv) > 1:
-        r = ask(" ".join(sys.argv[1:]))
-        print(("[%s] " % r["reason"]) + (r["text"] or ""))
-
-
 # ================================================================================================
 # THE FAILOVER — GEM keeps serving even though AI Studio is out of credit
 # ================================================================================================
@@ -466,3 +456,14 @@ def ask(prompt: str, priority: str = "WORK", grounded: bool = False,
     except Exception:
         pass
     return r
+
+
+if __name__ == "__main__":
+    import sys
+    b = budget()
+    print("GEM budget %s: used %d/%d | POLL %d/%d" %
+          (b["date"], b["used"], MAX_RPD, b["poll_used"], b["poll_cap"]))
+    if len(sys.argv) > 1:
+        r = ask(" ".join(sys.argv[1:]))
+        print(("[%s] " % r["reason"]) + (r["text"] or ""))
+
