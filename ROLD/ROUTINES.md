@@ -3,7 +3,7 @@
 POINTER: Ai\ROLD\RULES.md    (why — do not restate a rule here)
 POINTER: Ai\ROLD\RAILS.md    (paths, mounts, endpoints — do not restate a constant here)
 POINTER: Ai\ROLD\SCARS.md    (what went wrong before — do not retell a failure here)
-POINTER: V:\Ai\BU.MD         (live state; TidyUP! overwrites it)
+POINTER: V:\Ai\BU.MD         (mailbox tonight; STEP 9 writes nothing; do not clobber)
 
 ---
 
@@ -288,10 +288,11 @@ POINTER: Ai\ROLD\SCARS.md
 
 a. **MIRROR FIRST** — copy this session's changed control files into `PhD2_DATA_ARCHIVE\00_WORKING\`
    host-side (Read → Write). A publish is not a sync; an unmirrored file republishes stale forever.
-   🔴 **`V:\Ai\BU.MD` → `00_WORKING\MIRROR_BU.md` IS MANDATORY AND IS ALWAYS LAST**, because step 9
-   rewrites BU.MD after this step runs. **It lives outside the published tree, so it is the one file
-   that is never carried automatically.** *(Found stale by a full day on 2026-08-02 — the boot
-   pointer, the single file whose loss costs the most, was the only one with no off-machine copy.)*
+   🔴 **DO NOT copy `V:\Ai\BU.MD` → `00_WORKING\MIRROR_BU.md`.** Tonight `V:\Ai\BU.MD` is a 46 KB
+   QA mailbox (four docs), not a TidyUP pointer. Copying it publishes the mailbox over the last
+   good mirror.
+   🔴 **DO NOT copy `00_WORKING\MIRROR_BU.md` → `V:\Ai\BU.MD`.** The mirror is already stale
+   (20 KB vs 46 KB). Copying it the other way clobbers the mailbox.
    ⚠ **Check WHICH FILES SHOULD BE MIRRORED, not which ones you mirrored.** Verifying your own list
    against itself is a check that can only ever pass.
 b. Run the native Windows bat. Prefer the hidden/scheduled route (BootUP step 1): `publish_r2_silent.vbs`
@@ -302,11 +303,14 @@ d. **VERIFY live↔mirror by MD5, WITH A NEGATIVE CONTROL** (a file that should 
 e. **Cloud-verify SERVED BYTES:** `web_fetch` a file written THIS session and confirm its *content* —
    HTTP 200 is not verification.
 
-### STEP 9 [orig. 6] — OVERWRITE THE BOOT POINTER.
+### STEP 9 [orig. 6] — WRITE NOTHING TONIGHT. DO NOT CLOBBER THE MAILBOX.
 
 OVERRIDE: tidyup_target = V:\Ai\BU.MD
-Overwrite `V:\Ai\BU.MD`: current stream, cross-stream blockers, the four stream rows (what is open in
-each), rulings owed by Keith, first actions, open flags.
+**STEP 9 writes nothing tonight.** `V:\Ai\BU.MD` is a 46 KB QA mailbox (four docs). Overwriting
+it deletes tomorrow's boot handoff. Do not emit a monolith. Do not replace it with a POINTER
+line. Do not copy `MIRROR_BU.md` onto it.
+**Do NOT write `V:\Research4\BU.MD`** — DETAIL BACKLOG ONLY, a live READ path
+(`mesh_test.py`, `bts_paths.p()`), never updated at TidyUP.
 **Fixed name, fixed path. NEVER create a new dated handoff.**
 
 ### 🔴🔴 BU.MD CARRIES OPERATIONAL STATE ONLY. NO ANALYSIS. — Keith, 2026-08-03
