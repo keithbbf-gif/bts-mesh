@@ -190,7 +190,7 @@
    "author": "Cowork/Claude (2026-07-31)",
    "license": "ours",
    "location": "V:\\Research4\\Ai\\ROLD\\verify_pointers.py",
-   "utility": "Walks every POINTER/INCLUDEIF/OVERRIDE/PRECEDENCE line in every control document and resolves it. Exit 1 if any fails. UNKNOWN OPCODE IS A FAILURE, never a skip. --selftest plants a broken pointer and an unknown opcode and asserts both are caught. Found 45 real faults on its first run. 125 pointers GREEN 2026-07-31."
+   "utility": "Walks every POINTER/INCLUDEIF/OVERRIDE/PRECEDENCE line in every control document and resolves it. Exit 1 if any fails. UNKNOWN OPCODE IS A FAILURE, never a skip. V:\\Ai\\BU.MD GREEN requires pointer SHAPE (absent, or size<=512 AND first non-empty line starts with POINTER:), not mere existence — a 46 KB mailbox with one POINTER line buried in it is RED. --selftest plants a broken pointer, an unknown opcode, and a mailbox-shaped BU.MD. Found 45 real faults on its first run. 125 pointers GREEN 2026-07-31."
   },
   {
    "id": "scars",

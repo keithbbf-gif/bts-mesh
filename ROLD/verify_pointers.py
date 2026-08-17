@@ -17,6 +17,12 @@ WHAT IT CHECKS
   PRECEDENCE: <ordered list>                -> must be non-empty
   <ANYTHING ELSE>:                          -> an UNKNOWN OPCODE IS A FAILURE, never a skip.
 
+V:\\Ai\\BU.MD is also checked for POINTER SHAPE, not mere existence. A 46 KB QA mailbox
+that happens to contain one `POINTER:` line used to close GREEN. That is a false green.
+The boot pointer is GREEN only if the file is absent, OR (size <= 512 bytes AND the
+first non-empty line starts with POINTER:). A POINTER line buried in a mailbox is RED.
+STEP 8/9 smash binds live in another PR; this file is the checker only.
+
 That last rule is the one that matters. A checker that silently ignores what it does not
 understand reports green on a file it never read - which is the same class of defect as the
 mount that returned a clean, specific, wrong answer (SCARS S-28).
@@ -87,6 +93,38 @@ CONTROL_DOCS = [
 if AI_ROOT:
     CONTROL_DOCS += [os.path.join(AI_ROOT, "BU.MD"),
                      os.path.join(AI_ROOT, "Streams", "PLM_TODOS.md")]  # tidied 2026-07-31
+
+# V:\Ai\BU.MD is the boot pointer. Existence is not the contract: tonight that path
+# is a 46 KB QA mailbox with one POINTER: line buried in it, and existence-only
+# GREEN is a false green. Shape: absent, or size <= 512 and first non-empty line
+# starts with POINTER:. Research4\BU.MD is not this file and is not written here.
+BOOT_POINTER_MAX_BYTES = 512
+
+
+def _is_ai_bu(path: str) -> bool:
+    """V:\\Ai\\BU.MD in any spelling. Not V:\\Research4\\BU.MD."""
+    n = os.path.normpath(path).replace("\\", "/").lower().rstrip("/")
+    return n.endswith("/ai/bu.md")
+
+
+def _ai_bu_pointer_shaped(path: str) -> bool:
+    """True only when the FILE is a pointer, not when a POINTER: line exists in it."""
+    try:
+        size = os.path.getsize(path)
+    except OSError:
+        return False
+    if size > BOOT_POINTER_MAX_BYTES:
+        return False
+    try:
+        with open(path, encoding="utf-8", errors="replace") as fh:
+            for line in fh:
+                s = line.lstrip("\ufeff").strip()
+                if not s:
+                    continue
+                return s.startswith("POINTER:")
+    except OSError:
+        return False
+    return False
 
 # 🔴 APPEND-ONLY NARRATIVE — added 2026-08-11. These documents are PROSE BY CONSTRUCTION.
 #
@@ -179,7 +217,18 @@ def check(docs=None, verbose=True):
     fails, anchors, unknown, ok, skipped, prose = [], [], [], 0, 0, 0
     for doc in docs:
         if not os.path.exists(doc):
+            if _is_ai_bu(doc):
+                # Absent boot pointer is GREEN. Existence is not the contract.
+                continue
             fails.append((doc, "<the control document itself>", "MISSING DOCUMENT"))
+            continue
+        # V:\Ai\BU.MD: GREEN requires pointer SHAPE, not existence. A mailbox
+        # with one POINTER: line inside is the false green this closes.
+        if _is_ai_bu(doc) and not _ai_bu_pointer_shaped(doc):
+            fails.append((doc, "<the boot pointer itself>",
+                          "NOT POINTER-SHAPED (need size<=512 and first "
+                          "non-empty line starting with POINTER:; a POINTER "
+                          "line inside a mailbox is a FALSE GREEN)"))
             continue
         narrative = _is_narrative(doc)
         in_fence = False
@@ -245,11 +294,12 @@ def check(docs=None, verbose=True):
 
 
 def selftest() -> int:
-    """NEGATIVE CONTROL. Four plants, and the last two are the ones that matter.
+    """NEGATIVE CONTROL. Plants include the mailbox false-green.
 
     A verifier that has never been shown to FAIL is not a verifier (RULES.md). And an EXEMPTION
     that has never been shown to still catch a real fault is not an exemption — it is the check
-    switched off for that file. So the narrative case is tested in BOTH directions.
+    switched off for that file. So the narrative case is tested in BOTH directions. V:\\Ai\\BU.MD
+    shape is tested the same way: a 46 KB-class mailbox with a buried POINTER: must go RED.
     """
     d = tempfile.mkdtemp(prefix="ptrtest_")
     good = os.path.join(d, "real.md")
@@ -274,13 +324,43 @@ def selftest() -> int:
     open(nar_bad, "w", encoding="utf-8").write(
         "POINTER: %s\n\n**GEM: prose that is not an opcode.**\n" % missing)
 
-    print("--- selftest 1/4: broken pointer + unknown opcode, expecting RED ---")
+    # V:\Ai\BU.MD shape. Existence of a POINTER line inside a mailbox used to
+    # close GREEN. Named .../Ai/BU.MD so _is_ai_bu() fires. Plants are under
+    # tempfile only -- this selftest does not write V:\Ai\BU.MD or Research4.
+    ai_dir = os.path.join(d, "Ai")
+    os.makedirs(ai_dir, exist_ok=True)
+    mailbox = os.path.join(ai_dir, "BU.MD")
+    open(mailbox, "w", encoding="utf-8").write(
+        "# QA mailbox\n" + ("QA mailbox line\n" * 2500) + "POINTER: %s\n" % good)
+    ai_ok_dir = tempfile.mkdtemp(prefix="ptrtest_aibu_")
+    os.makedirs(os.path.join(ai_ok_dir, "Ai"), exist_ok=True)
+    ai_ok = os.path.join(ai_ok_dir, "Ai", "BU.MD")
+    open(ai_ok, "w", encoding="utf-8").write("POINTER: %s\n" % good)
+    absent = os.path.join(tempfile.mkdtemp(prefix="ptrtest_absent_"), "Ai", "BU.MD")
+    buried_small = os.path.join(tempfile.mkdtemp(prefix="ptrtest_bury_"), "Ai", "BU.MD")
+    os.makedirs(os.path.dirname(buried_small), exist_ok=True)
+    open(buried_small, "w", encoding="utf-8").write("QA header\n\nPOINTER: %s\n" % good)
+    oversized = os.path.join(tempfile.mkdtemp(prefix="ptrtest_big_"), "Ai", "BU.MD")
+    os.makedirs(os.path.dirname(oversized), exist_ok=True)
+    open(oversized, "w", encoding="utf-8").write(
+        "POINTER: %s\n" % good + ("x\n" * 300))
+
+    print("--- selftest 1/8: broken pointer + unknown opcode, expecting RED ---")
     n = check([doc])
     clean = check([clean_doc], verbose=False)
-    print("--- selftest 3/4: narrative doc, prose only, expecting GREEN ---")
+    print("--- selftest 3/8: narrative doc, prose only, expecting GREEN ---")
     nar_clean = check([nar_ok])
-    print("--- selftest 4/4: narrative doc with a BROKEN POINTER, expecting RED ---")
+    print("--- selftest 4/8: narrative doc with a BROKEN POINTER, expecting RED ---")
     nar_broken = check([nar_bad])
+    print("--- selftest 5/8: 46KB-class mailbox BU.MD with a buried POINTER, expecting RED ---")
+    mailbox_n = check([mailbox])
+    print("--- selftest 6/8: pointer-shaped BU.MD (size<=512, first line POINTER:), expecting GREEN ---")
+    shaped_n = check([ai_ok])
+    print("--- selftest 7/8: absent BU.MD, expecting GREEN ---")
+    absent_n = check([absent])
+    print("--- selftest 8/8: small file / oversized file that fail shape, expecting RED ---")
+    buried_n = check([buried_small])
+    oversized_n = check([oversized])
 
     print("-" * 78)
     print("  broken doc      = %d  (want >=2)" % n)
@@ -288,12 +368,20 @@ def selftest() -> int:
     print("  narrative prose = %d  (want 0  -- the exemption works)" % nar_clean)
     print("  narrative FAULT = %d  (want >=1 -- the exemption did NOT disable pointer checking)"
           % nar_broken)
-    if n >= 2 and clean == 0 and nar_clean == 0 and nar_broken >= 1:
+    print("  mailbox BU.MD   = %d  (want >=1 -- shape, not existence)" % mailbox_n)
+    print("  shaped BU.MD    = %d  (want 0)" % shaped_n)
+    print("  absent BU.MD    = %d  (want 0 -- absence is GREEN)" % absent_n)
+    print("  buried-small    = %d  (want >=1 -- first line is not POINTER:)" % buried_n)
+    print("  oversized       = %d  (want >=1 -- size > 512)" % oversized_n)
+    if (n >= 2 and clean == 0 and nar_clean == 0 and nar_broken >= 1
+            and mailbox_n >= 1 and shaped_n == 0 and absent_n == 0
+            and buried_n >= 1 and oversized_n >= 1):
         # ASCII ONLY. An em dash here came back as mojibake in the queue log on the very run
         # that proved this fix - S-134's lesson generalized: anything a scheduler may redirect
         # must be ASCII on stdout, not just free of emoji.
-        print("SELFTEST PASS - RED on a broken pointer, GREEN on prose, and STILL RED on a")
-        print("                broken pointer inside an append-only narrative document.")
+        print("SELFTEST PASS - RED on a broken pointer, GREEN on prose, STILL RED on a")
+        print("                broken pointer inside an append-only narrative document,")
+        print("                and RED on a mailbox BU.MD that merely CONTAINS a POINTER line.")
         return 0
     print("SELFTEST FAIL — this checker cannot be trusted.")
     return 1
