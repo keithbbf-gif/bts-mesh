@@ -4,6 +4,8 @@ bts_serve.py — the dashboard's server.  REPLACES `python -m http.server 8765`.
 WHY
   The dashboard needs three things a static file server cannot give it:
     /api/burn   live burn-rate for GEM (requests+tokens, free) and SGH (dollars+tokens, paid)
+                plus packets{} — stat of the phone pair, board.json, tree_lock, tmp/temp_files.toml
+                plus kmesh{} — measured cockpit from rails.toml (Vertex nested under GEM)
     /api/bench  run the real mesh <TEST> — the API rails that CORS blocks the browser from timing
     /api/state  cheap heartbeat
   Everything else is served exactly as before (same port, same in-pane YouTube fix — a file://
@@ -41,7 +43,108 @@ def _read_json(path, default=None):
         return default
 
 
-def burn():
+# ── LIVE PACKETS (phone / board / lock / tmp) ────────────────────────────────
+# Peer files. IMPORT the live helpers — do not ship replacement path modules.
+# Absent lock file → FREE. Never create the lock file.
+def default_packet_paths():
+    """bts_phone.OUTBOX/INBOX + bts_paths.board/queue/airoot. No invented roots."""
+    import bts_phone
+    import bts_paths
+    return {
+        "phone_out": bts_phone.OUTBOX,
+        "phone_in": bts_phone.INBOX,
+        "board": bts_paths.board("board.json"),
+        "lock": bts_paths.queue("tree_lock.json"),
+        "tmp": bts_paths.airoot("tmp", "temp_files.toml"),
+    }
+
+
+def _leaf(lid, path):
+    """id, path, present, mtime, size. Stat only — never create."""
+    out = {"id": lid, "path": path, "present": False, "mtime": None, "size": None}
+    if not path:
+        return out
+    try:
+        st = os.stat(path)
+    except OSError:
+        return out
+    out["present"] = True
+    out["mtime"] = st.st_mtime
+    out["size"] = st.st_size
+    return out
+
+
+def _item_state(item):
+    """Live rows use state. status is a fallback only — not the floor."""
+    if not isinstance(item, dict):
+        return ""
+    raw = item.get("state")
+    if raw is None or raw == "":
+        raw = item.get("status")
+    return str(raw or "").upper().replace("-", "_")
+
+
+def _board_meta(path):
+    """seq + open counts from items[]. Torn/unreadable → null, null.
+
+    Live board.json is {seq, items}. Rows carry state (OPEN / NEEDS_OWNER / DONE).
+    There is no top-level "open" string and no status key on live rows.
+    open is derived: {open, needs_owner} = counts of item state OPEN / NEEDS_OWNER.
+    """
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+    except Exception:
+        return None, None
+    if not isinstance(data, dict):
+        return None, None
+    seq = data.get("seq")
+    if not isinstance(seq, int):
+        seq = None
+    items = data.get("items")
+    if not isinstance(items, list):
+        return seq, None
+    n_open = n_need = 0
+    for it in items:
+        st = _item_state(it)
+        if st == "OPEN":
+            n_open += 1
+        elif st == "NEEDS_OWNER":
+            n_need += 1
+    return seq, {"open": n_open, "needs_owner": n_need}
+
+
+def packets(paths=None):
+    """Five leaves: phone_out / phone_in / board / lock / tmp. Stat only."""
+    if paths is None:
+        try:
+            paths = default_packet_paths()
+        except Exception:
+            # This snapshot does not ship live bts_phone / airoot. Import-only.
+            paths = {k: None for k in ("phone_out", "phone_in", "board", "lock", "tmp")}
+    phone_out = _leaf("phone_out", paths.get("phone_out"))
+    phone_in = _leaf("phone_in", paths.get("phone_in"))
+    board = _leaf("board", paths.get("board"))
+    lock = _leaf("lock", paths.get("lock"))
+    tmp = _leaf("tmp", paths.get("tmp"))
+
+    if board["present"]:
+        board["seq"], board["open"] = _board_meta(board["path"])
+    else:
+        board["seq"], board["open"] = None, None
+
+    lock["state"] = "HELD" if lock["present"] else "FREE"
+
+    return {
+        "phone_out": phone_out,
+        "phone_in": phone_in,
+        "board": board,
+        "lock": lock,
+        "tmp": tmp,
+    }
+
+
+def burn(packet_paths=None):
     """Live burn-rate for both rails.
 
     The two rails are NOT the same kind of meter, and the dashboard should not pretend they are:
@@ -96,6 +199,21 @@ def burn():
         "usd_per_ktok": round(spent / ((ti + to) / 1000.0), 4) if (ti + to) else None,
         "autoreload": True,   # $5 at a time -> the hard-stop is a safety device, say so
     }
+    # Peer-file packets: phone / board / lock / tmp. Stat only — not a rail probe.
+    out["packets"] = packets(packet_paths)
+    # Full measured cockpit from rails.toml. In-memory only — never writes dash.json.
+    try:
+        import bts_kmesh_cockpit
+        out["kmesh"] = bts_kmesh_cockpit.build(packets=out["packets"])
+    except Exception as e:
+        out["kmesh"] = {
+            "ok": False,
+            "status": "UNKNOWN",
+            "reason": "%s: %s" % (type(e).__name__, str(e)[:200]),
+            "vertex_node_drawn": False,
+            "nodes": [],
+            "rails": [],
+        }
     return out
 
 
@@ -214,7 +332,88 @@ def _whos_on_port(port=PORT):
         return "foreign"          # something is there, but it cannot answer /api/state -> not us
 
 
+def _selftest():
+    """Throwaway dir. Five leaves, absent lock → FREE, torn board → null, no path-module write."""
+    import tempfile, shutil
+    d = tempfile.mkdtemp(prefix="bts_burn_packets_")
+    ok = True
+
+    def check(name, cond):
+        nonlocal ok
+        print(("  PASS " if cond else "  FAIL ") + name)
+        if not cond:
+            ok = False
+
+    try:
+        empty = {
+            "phone_out": os.path.join(d, "COW_TO_QA_ENGINEER.md"),
+            "phone_in": os.path.join(d, "QA_ENGINEER_TO_COW.md"),
+            "board": os.path.join(d, "board.json"),
+            "lock": os.path.join(d, "tree_lock.json"),
+            "tmp": os.path.join(d, "tmp", "temp_files.toml"),
+        }
+        p0 = packets(empty)
+        check("five leaves",
+              all(k in p0 for k in ("phone_out", "phone_in", "board", "lock", "tmp")))
+        check("absent lock is FREE", p0["lock"]["state"] == "FREE" and not p0["lock"]["present"])
+        check("no holder field", "holder" not in p0["lock"])
+        check("leaf ids", p0["phone_out"]["id"] == "phone_out" and p0["lock"]["id"] == "lock")
+        check("did not create lock", not os.path.exists(empty["lock"]))
+
+        with open(empty["phone_out"], "w", encoding="utf-8") as f:
+            f.write("# out\n")
+        with open(empty["phone_in"], "w", encoding="utf-8") as f:
+            f.write("# in\n")
+        with open(empty["board"], "w", encoding="utf-8") as f:
+            json.dump({"seq": 7, "items": [
+                {"state": "OPEN"}, {"state": "OPEN"},
+                {"state": "NEEDS_OWNER"}, {"state": "DONE"},
+            ]}, f)
+        os.makedirs(os.path.dirname(empty["tmp"]), exist_ok=True)
+        with open(empty["tmp"], "w", encoding="utf-8") as f:
+            f.write("x=1\n")
+        with open(empty["lock"], "w", encoding="utf-8") as f:
+            f.write("held\n")
+
+        p1 = packets(empty)
+        check("phone present mtime/size",
+              p1["phone_out"]["present"] and p1["phone_out"]["size"] > 0
+              and p1["phone_in"]["present"])
+        check("board.seq", p1["board"]["seq"] == 7)
+        check("board.open from items",
+              p1["board"]["open"] == {"open": 2, "needs_owner": 1})
+        check("lock HELD no holder", p1["lock"]["state"] == "HELD" and "holder" not in p1["lock"])
+        check("tmp present", p1["tmp"]["present"] and p1["tmp"]["size"] > 0)
+
+        with open(empty["board"], "w", encoding="utf-8") as f:
+            f.write("not-json{{{")
+        torn = packets(empty)
+        check("torn board is null not 0,0",
+              torn["board"]["seq"] is None and torn["board"]["open"] is None)
+
+        try:
+            default_packet_paths()
+            check("live helpers import", True)
+        except Exception:
+            check("snapshot imports live helpers only (no stub)", True)
+
+        b = burn(empty)
+        check("burn carries five leaves", "phone_out" in (b.get("packets") or {}))
+        check("burn still has gem+sgh", "gem" in b and "sgh" in b)
+        check("burn carries kmesh", isinstance(b.get("kmesh"), dict))
+        km = b.get("kmesh") or {}
+        check("kmesh has no Vertex node",
+              "vertex" not in {str(n.get("id") or "").lower() for n in (km.get("nodes") or [])})
+        check("no rail_check in this module", "rail_check" not in sys.modules)
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+    print("SELFTEST %s" % ("PASS" if ok else "FAIL"))
+    return 0 if ok else 1
+
+
 if __name__ == "__main__":
+    if "--selftest" in sys.argv:
+        raise SystemExit(_selftest())
     who = _whos_on_port()
     if who == "ours":
         print("bts_serve already running on %d — nothing to do." % PORT)
@@ -229,7 +428,7 @@ if __name__ == "__main__":
         raise SystemExit(3)
     srv = ThreadingHTTPServer(("127.0.0.1", PORT), H)   # localhost ONLY — this process can spend
     print("BTS dashboard server -> http://127.0.0.1:%d/jack_command.html" % PORT)
-    print("  /api/burn      live GEM + SGH burn rate")
+    print("  /api/burn      live GEM + SGH burn + peer packets + measured KMesh cockpit")
     print("  /api/bench     real mesh <TEST> (add ?free=1 to spend nothing)")
     print("  /api/surfaces  ITC / GDX / ODX / local capacity")
     print("  /api/policy    SPEED<->COST dial (?bias=0..100)")

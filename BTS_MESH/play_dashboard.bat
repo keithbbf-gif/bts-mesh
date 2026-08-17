@@ -1,10 +1,14 @@
 @echo off
 REM Launch Jack's Mesh Command over http://localhost so YouTube embeds work
 REM (opening the .html directly as a file:// page causes YouTube "error 153").
+REM
+REM ⚠ MUST be bts_serve.py — `python -m http.server 8765` has NO /api routes.
+REM That is the S-10 class: a foreign server on 8765 looks identical to a working
+REM dashboard and silently kills /api/burn, /api/bench, and the cockpit paint.
 cd /d "%~dp0"
-REM refresh the live mesh snapshot the dashboard reads (registry / signals / counters)
-python bts_state.py . 2>nul
 start "" "http://localhost:8765/jack_command.html"
-echo Serving this folder at http://localhost:8765  (close this window to stop)
-echo Dashboard shows LIVE mesh data from mesh_state.json (run: python bts.py doctor . to health-check)
-python -m http.server 8765
+echo Serving via bts_serve.py at http://localhost:8765
+echo   /api/burn  live GEM + SGH + packets + KMesh cockpit
+echo   /api/bench real mesh ^<TEST^>
+echo Close this window to stop.
+python bts_serve.py

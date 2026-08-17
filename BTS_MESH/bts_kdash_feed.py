@@ -167,6 +167,8 @@ def build(rails_path: str = RAILS) -> dict:
 
     surfaces = [{
         "name": s["name"], "job": s.get("job"), "reach": s.get("node_reach"),
+        # Drive letters / URLs are configured path values, never surface identity.
+        "configured_path": s.get("path"),
         "write_mbs": s.get("write_mbs"), "read_mbs": s.get("read_mbs"),
         "used_gb": s.get("used_gb"), "quota_gb": s.get("quota_gb"),
         "pct": _pct(s),
