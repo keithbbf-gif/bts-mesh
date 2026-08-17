@@ -2679,12 +2679,12 @@ function packetsToEvents(p){
     ev.push({seq: ++seq, ts, actor, target, event, detail, direction: direction || "out"});
   };
   const ph = p.phone || {};
-  if (ph.cow_to_qa && ph.cow_to_qa.mtime) add("PHONE","SGH","note","COW_TO_QA "+(ph.cow_to_qa.size||0)+" B");
-  if (ph.qa_to_cow && ph.qa_to_cow.mtime) add("PHONE","COWORK","note","QA_TO_COW "+(ph.qa_to_cow.size||0)+" B","in");
-  if (p.board && p.board.mtime) add("BOARD","ROLD","note","seq="+(p.board.seq||0)+" open="+(p.board.open||0));
-  if (p.lock && p.lock.status === "FREE") add("LOCK","BUS","STATUS","FREE");
-  else if (p.lock && p.lock.mtime) add("LOCK","BUS","STATUS","HELD");
-  if (p.tmp && p.tmp.mtime) add("TMP","COWORK","note","open="+(p.tmp.open||0));
+  if (ph.cow_to_qa && ph.cow_to_qa.mtime) add("PHONE","GBW","note","COW_TO_QA "+(ph.cow_to_qa.size||0)+" B");
+  if (ph.qa_to_cow && ph.qa_to_cow.mtime) add("PHONE","GBW","note","QA_TO_COW "+(ph.qa_to_cow.size||0)+" B","in");
+  if (p.board && p.board.mtime) add("BOARD","GBW","note","seq="+(p.board.seq||0)+" open="+(p.board.open||0));
+  if (p.lock && p.lock.status === "FREE") add("LOCK","GBW","STATUS","FREE");
+  else if (p.lock && p.lock.mtime) add("LOCK","GBW","STATUS","HELD");
+  if (p.tmp && p.tmp.mtime) add("TMP","GBW","note","open="+(p.tmp.open||0));
   return ev;
 }
 function paintLivePackets(p){

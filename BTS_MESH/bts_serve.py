@@ -47,93 +47,19 @@ def _read_json(path, default=None):
 # These are NOT CHANNELS through cowork. /api/burn only STATs them — no rail
 # probe, no rail_check, no dash.json rewrite, no bts_kdash_feed loop.
 #
-# Live Windows names (diagnosis): V:\Ai\COW_TO_QA_ENGINEER.md + QA_ENGINEER_TO_COW.md,
-# board.json, tree_lock|lock, tmp\temp_files.toml. In-repo docs/config copies win
-# if present; otherwise the V:\Ai\ constants (and bts_paths.ai when the research
-# tree is mounted). Absent lock → FREE.
-_LIVE_AI = r"V:\Ai"
-_PHONE_COW_TO_QA = "COW_TO_QA_ENGINEER.md"
-_PHONE_QA_TO_COW = "QA_ENGINEER_TO_COW.md"
-_BOARD_NAME = "board.json"
-_TMP_REL = ("tmp", "temp_files.toml")
-_LOCK_NAMES = ("tree_lock", "lock")
-
-
-def _ai_join(*parts):
-    """bts_paths.ai() when the research tree resolves; else None. Never raises."""
-    try:
-        import bts_paths
-        return bts_paths.ai(*parts)
-    except Exception:
-        return None
-
-
-def _peer_candidates(*rel):
-    """docs/config first, then the live V:\\Ai\\ constants, then the Ai sibling, then bts_paths."""
-    out = []
-    here_ai = os.path.dirname(HERE)
-    for base in (
-        os.path.join(HERE, "docs"),
-        os.path.join(HERE, "config"),
-        os.path.join(here_ai, "docs"),
-        os.path.join(here_ai, "config"),
-    ):
-        out.append(os.path.join(base, *rel))
-    out.append(os.path.join(_LIVE_AI, *rel))
-    out.append(os.path.join(here_ai, *rel))
-    p = _ai_join(*rel)
-    if p:
-        out.append(p)
-    return out
-
-
-def _pick_peer(candidates, canonical):
-    for p in candidates:
-        if p and os.path.isfile(p):
-            return p
-    return canonical
-
-
-def _pick_lock():
-    """First existing tree_lock or lock; else the live V:\\Ai\\tree_lock name (absent → FREE)."""
-    seen = []
-    for base in (
-        os.path.join(HERE, "docs"), os.path.join(HERE, "config"),
-        os.path.join(os.path.dirname(HERE), "docs"),
-        os.path.join(os.path.dirname(HERE), "config"),
-        _LIVE_AI, os.path.dirname(HERE),
-    ):
-        for name in _LOCK_NAMES:
-            p = os.path.join(base, name)
-            seen.append(p)
-            if os.path.isfile(p):
-                return p
-    via_ai = _ai_join("tree_lock")
-    if via_ai and os.path.isfile(via_ai):
-        return via_ai
-    for name in _LOCK_NAMES:
-        via_ai = _ai_join(name)
-        if via_ai and os.path.isfile(via_ai):
-            return via_ai
-    return os.path.join(_LIVE_AI, "tree_lock")
-
-
+# Paths come from the existing helpers. Do not invent V:\Ai\board.json or
+# V:\Ai\tree_lock. Absent lock file → FREE. Never create the lock file.
+# Events: actor PHONE|BOARD|LOCK|TMP, target GBW.
 def default_packet_paths():
-    """Resolved peer-file paths. Override in tests; do not invent a second registry."""
+    """Peer-file paths via bts_phone + bts_paths. Override in tests only."""
+    import bts_phone
+    import bts_paths
     return {
-        "phone_cow_to_qa": _pick_peer(
-            _peer_candidates(_PHONE_COW_TO_QA),
-            os.path.join(_LIVE_AI, _PHONE_COW_TO_QA)),
-        "phone_qa_to_cow": _pick_peer(
-            _peer_candidates(_PHONE_QA_TO_COW),
-            os.path.join(_LIVE_AI, _PHONE_QA_TO_COW)),
-        "board": _pick_peer(
-            _peer_candidates(_BOARD_NAME),
-            os.path.join(_LIVE_AI, _BOARD_NAME)),
-        "lock": _pick_lock(),
-        "tmp": _pick_peer(
-            _peer_candidates(*_TMP_REL),
-            os.path.join(_LIVE_AI, *_TMP_REL)),
+        "phone_cow_to_qa": bts_phone.OUTBOX,
+        "phone_qa_to_cow": bts_phone.INBOX,
+        "board": bts_paths.board("board.json"),
+        "lock": bts_paths.queue("tree_lock.json"),
+        "tmp": bts_paths.airoot("tmp", "temp_files.toml"),
     }
 
 
@@ -230,8 +156,8 @@ def _iso_from_mtime(mtime):
 def _packet_events(phone_out, phone_in, board, lock, tmp, board_seq):
     """Events the existing cockpit renderSignals / fireNewPackets already know how to paint.
 
-    Actor names are the peer files themselves (not a new NODES entry — posOf maps
-    unknowns to the hub). CoW is not inserted as a bus hop.
+    Actor is the peer file (PHONE|BOARD|LOCK|TMP). Target is GBW — not cowork
+    or BUS catalog names. posOf maps unknown actors to the hub; GBW is a node.
     """
     ev, i = [], 0
     max_mtime = max(
@@ -239,39 +165,39 @@ def _packet_events(phone_out, phone_in, board, lock, tmp, board_seq):
         default=0)
     base = int((max_mtime or 0) * 1000) + int(board_seq or 0) * 1_000_000_000
 
-    def add(actor, target, event, detail, mtime, direction="out"):
+    def add(actor, event, detail, mtime, direction="out"):
         nonlocal i
         i += 1
         ev.append({
             "seq": base + i,
             "ts": _iso_from_mtime(mtime),
             "actor": actor,
-            "target": target,
+            "target": "GBW",
             "event": event,
             "detail": detail,
             "direction": direction,
         })
 
     if phone_out.get("exists"):
-        add("PHONE", "SGH", "note",
+        add("PHONE", "note",
             "COW_TO_QA %s B" % (phone_out.get("size") or 0),
             phone_out.get("mtime"))
     if phone_in.get("exists"):
-        add("PHONE", "COWORK", "note",
+        add("PHONE", "note",
             "QA_TO_COW %s B" % (phone_in.get("size") or 0),
             phone_in.get("mtime"), direction="in")
     if board.get("exists"):
-        add("BOARD", "ROLD", "note",
+        add("BOARD", "note",
             "seq=%s open=%s" % (board.get("seq") or 0, board.get("open") or 0),
             board.get("mtime"))
     if lock.get("status") == "FREE":
-        add("LOCK", "BUS", "STATUS", "FREE", lock.get("mtime"))
+        add("LOCK", "STATUS", "FREE", lock.get("mtime"))
     elif lock.get("exists"):
-        add("LOCK", "BUS", "STATUS",
+        add("LOCK", "STATUS",
             "HELD %s" % (lock.get("holder") or "").strip(),
             lock.get("mtime"))
     if tmp.get("exists"):
-        add("TMP", "COWORK", "note",
+        add("TMP", "note",
             "open=%s" % (tmp.get("open") or 0),
             tmp.get("mtime"))
     return ev
@@ -509,10 +435,10 @@ def _selftest():
 
     try:
         empty = {
-            "phone_cow_to_qa": os.path.join(d, _PHONE_COW_TO_QA),
-            "phone_qa_to_cow": os.path.join(d, _PHONE_QA_TO_COW),
-            "board": os.path.join(d, _BOARD_NAME),
-            "lock": os.path.join(d, "tree_lock"),
+            "phone_cow_to_qa": os.path.join(d, "COW_TO_QA_ENGINEER.md"),
+            "phone_qa_to_cow": os.path.join(d, "QA_ENGINEER_TO_COW.md"),
+            "board": os.path.join(d, "board.json"),
+            "lock": os.path.join(d, "tree_lock.json"),
             "tmp": os.path.join(d, "tmp", "temp_files.toml"),
         }
         p0 = packets(empty)
@@ -542,7 +468,24 @@ def _selftest():
         check("lock HELD + holder", p1["lock"]["status"] == "HELD" and p1["lock"]["holder"] == "COWORK")
         check("tmp open count", p1["tmp"]["open"] == 1)
         check("events for existing peers", len(p1["events"]) >= 4)
+        check("events target GBW", all(e.get("target") == "GBW" for e in p1["events"]))
+        check("events actors are peers",
+              all(e.get("actor") in ("PHONE", "BOARD", "LOCK", "TMP") for e in p1["events"]))
         check("fingerprint mtime advanced", p1["mtime"] > 0)
+
+        defaults = default_packet_paths()
+        check("board via bts_paths.board",
+              defaults["board"].replace("\\", "/").endswith("_board/board.json"))
+        check("lock via bts_paths.queue",
+              defaults["lock"].replace("\\", "/").endswith("_queue/tree_lock.json"))
+        check("tmp via bts_paths.airoot",
+              defaults["tmp"].replace("\\", "/").endswith("tmp/temp_files.toml"))
+        check("phone via bts_phone",
+              "COW_TO_QA_ENGINEER.md" in defaults["phone_cow_to_qa"]
+              and "QA_ENGINEER_TO_COW.md" in defaults["phone_qa_to_cow"])
+        check("default lock not created", not os.path.exists(defaults["lock"]))
+        check("not invented V:\\Ai\\board.json",
+              defaults["board"].replace("\\", "/") != "V:/Ai/board.json")
 
         b = burn(empty)
         check("burn carries packets", isinstance(b.get("packets"), dict) and b["packets"]["seq"] == 7)

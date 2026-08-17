@@ -33,6 +33,7 @@ RESOLUTION ORDER — ONE Windows entry, on purpose:
 
 USE:
     from bts_paths import ROOT, secrets, ai, archive, mesh
+    from bts_paths import airoot, board, queue   # V:\Ai peer files, not Research4
     KEY_FILE = secrets("vertex_key.txt")
     python bts_paths.py            -> print what resolved, and why
 ================================================================================
@@ -81,18 +82,49 @@ def _resolve():
         (_WIN, _NIX))
 
 
-ROOT, HOW = _resolve()
+try:
+    ROOT, HOW = _resolve()
+except RuntimeError:
+    # Snapshot / sandbox with no Research4: Research4 helpers stay fail-loud on use.
+    # airoot / board / queue do not need that tree.
+    ROOT, HOW = None, "unresolved"
 
-def p(*parts):      return os.path.join(ROOT, *parts)
-def ai(*parts):     return os.path.join(ROOT, "Ai", *parts)
-def mesh(*parts):   return os.path.join(ROOT, "Ai", "BTS_MESH", *parts)
-def archive(*parts):return os.path.join(ROOT, "Ai", "PhD2_DATA_ARCHIVE", *parts)
-def working(*parts):return os.path.join(ROOT, "Ai", "PhD2_DATA_ARCHIVE", "00_WORKING", *parts)
+# V:\Ai is the live peer-file root (letters, _board, _queue, tmp). Distinct from
+# ROOT (V:\Research4). Join only — never create the path.
+_AI_ROOT = r"V:\Ai"
+
+
+def _need_root():
+    if not ROOT:
+        raise RuntimeError(
+            "bts_paths: cannot find the research tree. Set BTS_RESEARCH_ROOT.")
+    return ROOT
+
+def p(*parts):      return os.path.join(_need_root(), *parts)
+def ai(*parts):     return os.path.join(_need_root(), "Ai", *parts)
+def mesh(*parts):   return os.path.join(_need_root(), "Ai", "BTS_MESH", *parts)
+def archive(*parts):return os.path.join(_need_root(), "Ai", "PhD2_DATA_ARCHIVE", *parts)
+def working(*parts):return os.path.join(_need_root(), "Ai", "PhD2_DATA_ARCHIVE", "00_WORKING", *parts)
 
 def secrets(*parts):
     """The keys. SAFE BY LOCATION: a SIBLING of Ai\\, never inside it — the R2 publish pushes Ai\\ to a
     PUBLIC website, so an exclude list is a blocklist and this is not. Never move it under Ai\\."""
-    return os.path.join(ROOT, ".secrets", *parts)
+    return os.path.join(_need_root(), ".secrets", *parts)
+
+
+def airoot(*parts):
+    """V:\\Ai\\... — letters, tmp, and the peer-file tree. Join only; never create."""
+    return os.path.join(_AI_ROOT, *parts)
+
+
+def board(*parts):
+    """V:\\Ai\\_board\\...  e.g. board('board.json')."""
+    return airoot("_board", *parts)
+
+
+def queue(*parts):
+    """V:\\Ai\\_queue\\...  e.g. queue('tree_lock.json')."""
+    return airoot("_queue", *parts)
 
 
 if __name__ == "__main__":
@@ -105,11 +137,23 @@ if __name__ == "__main__":
     print()
     for name, fn in (("ai", ai), ("mesh", mesh), ("archive", archive),
                      ("working", working), ("secrets", secrets)):
-        d = fn()
-        print("  %-9s %-52s %s" % (name, d, "OK" if os.path.isdir(d) else "*** MISSING ***"))
+        try:
+            d = fn()
+            print("  %-9s %-52s %s" % (name, d, "OK" if os.path.isdir(d) else "*** MISSING ***"))
+        except RuntimeError as e:
+            print("  %-9s %s" % (name, e))
     print()
-    k = secrets("vertex_key.txt")
-    print("  key check : %-52s %s" % (k, "OK" if os.path.isfile(k) else "*** MISSING ***"))
+    for name, fn, arg in (("airoot", airoot, ()),
+                          ("board", board, ("board.json",)),
+                          ("queue", queue, ("tree_lock.json",))):
+        d = fn(*arg)
+        print("  %-9s %-52s %s" % (name, d, "exists" if os.path.isfile(d) or os.path.isdir(d) else "join-only"))
+    print()
+    try:
+        k = secrets("vertex_key.txt")
+        print("  key check : %-52s %s" % (k, "OK" if os.path.isfile(k) else "*** MISSING ***"))
+    except RuntimeError:
+        print("  key check : (research tree unresolved)")
     print()
     print("  ladder (win)    : %s" % _WIN)
     print("  ladder (sandbox): %s" % _NIX)

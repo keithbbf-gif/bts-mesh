@@ -20,7 +20,7 @@ try:
         "phone_cow_to_qa": os.path.join(d, "COW_TO_QA_ENGINEER.md"),
         "phone_qa_to_cow": os.path.join(d, "QA_ENGINEER_TO_COW.md"),
         "board": os.path.join(d, "board.json"),
-        "lock": os.path.join(d, "tree_lock"),
+        "lock": os.path.join(d, "tree_lock.json"),
         "tmp": os.path.join(d, "tmp", "temp_files.toml"),
     }
 
@@ -47,7 +47,25 @@ try:
     check("lock HELD", p1["lock"]["status"] == "HELD" and p1["lock"]["holder"] == "COWORK")
     check("tmp open count", p1["tmp"]["open"] == 1)
     check("events painted", len(p1["events"]) >= 4)
+    check("events target GBW", all(e.get("target") == "GBW" for e in p1["events"]))
+    check("events actors are peers",
+          all(e.get("actor") in ("PHONE", "BOARD", "LOCK", "TMP") for e in p1["events"]))
     check("fingerprint mtime", p1["mtime"] > 0)
+
+    print("== helpers, not invented roots ==")
+    defaults = S.default_packet_paths()
+    n = lambda p: p.replace("\\", "/")
+    check("board is _board/board.json", n(defaults["board"]).endswith("_board/board.json"))
+    check("lock is _queue/tree_lock.json", n(defaults["lock"]).endswith("_queue/tree_lock.json"))
+    check("tmp is tmp/temp_files.toml", n(defaults["tmp"]).endswith("tmp/temp_files.toml"))
+    check("phone OUTBOX/INBOX",
+          "COW_TO_QA_ENGINEER.md" in defaults["phone_cow_to_qa"]
+          and "QA_ENGINEER_TO_COW.md" in defaults["phone_qa_to_cow"])
+    check("default lock not created", not os.path.exists(defaults["lock"]))
+    check("not V:/Ai/board.json", n(defaults["board"]) != "V:/Ai/board.json")
+    live = S.packets()
+    check("stat does not create lock", not os.path.exists(defaults["lock"]))
+    check("absent default lock is FREE", live["lock"]["status"] == "FREE")
 
     print("== burn() ==")
     b = S.burn(paths)
