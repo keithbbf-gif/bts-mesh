@@ -250,14 +250,25 @@ def selftest() -> int:
 
     # STEP 8: dedicated pointer source wins over mailbox; self-clobber skips
     dedicated = os.path.join(d, "dedicated.md")
-    open(dedicated, "w", encoding="utf-8", newline="").write(format_pointer(mirror))
     mirror2 = os.path.join(d, "MIRROR2.md")
     open(mirror2, "w", encoding="utf-8").write("KEEP\n")
+    open(dedicated, "w", encoding="utf-8", newline="").write(format_pointer(mirror2))
     r8s = step8_mirror(mailbox, mirror2, pointer_source=dedicated)
     passed.append(("STEP 8 skips pointer-to-self (would clobber referent)",
                    r8s.get("action") == "skipped" and "clobber" in r8s.get("reason", "")))
     passed.append(("STEP 8 self-clobber left dest untouched",
                    open(mirror2, encoding="utf-8").read() == "KEEP\n"))
+
+    dest3 = os.path.join(d, "MIRROR3.md")
+    open(dest3, "w", encoding="utf-8").write("OLD\n")
+    ded2 = os.path.join(d, "dedicated2.md")
+    open(ded2, "w", encoding="utf-8", newline="").write(format_pointer(other))
+    r8d = step8_mirror(mailbox, dest3, pointer_source=ded2)
+    passed.append(("STEP 8 copies dedicated pointer source when src is a mailbox",
+                   r8d.get("action") == "copied"))
+    passed.append(("STEP 8 dedicated copy replaced dest with the pointer file",
+                   is_pointer_shaped(open(dest3, encoding="utf-8").read(),
+                                     size=os.path.getsize(dest3))))
 
     # STEP 9: refuse Research4\\BU.MD
     r4 = os.path.join(d, "Research4", "BU.MD")
