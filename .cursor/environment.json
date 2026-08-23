@@ -1,0 +1,14 @@
+{
+  "name": "BTS Mesh",
+  "install": "python3 -m compileall -q BTS_MESH ROLD",
+  "terminals": [
+    {
+      "name": "dashboard",
+      "command": "cd BTS_MESH && python3 bts_serve.py",
+      "description": "Jack's Mesh Command dashboard server (bts_serve.py) on http://127.0.0.1:8765/jack_command.html. Serves the static dashboard plus the /api/state, /api/burn, /api/surfaces, /api/policy, /api/capacity and /api/bench routes. Binds 127.0.0.1 only, by design."
+    }
+  ],
+  "ports": [
+    { "name": "dashboard", "port": 8765 }
+  ]
+}
